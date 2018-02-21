@@ -119,10 +119,10 @@ public class CloudSimExample5 {
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
 
-			Cloudlet cloudlet1 = new Cloudlet(id,2 ,length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			cloudlet1.setUserId(brokerId1);
 
-			Cloudlet cloudlet2 = new Cloudlet(id,2 ,length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			cloudlet2.setUserId(brokerId2);
 
 			//add the cloudlets to the lists: each cloudlet belongs to one user

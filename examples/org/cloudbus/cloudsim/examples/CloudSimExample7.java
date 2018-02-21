@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
@@ -75,6 +76,7 @@ public class CloudSimExample7 {
 	private static List<Cloudlet> createCloudlet(int userId, int cloudlets, int idShift){
 		// Creates a container to store Cloudlets
 		LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();
+		
 
 		//cloudlet parameters
 		long length = 40000;
@@ -86,7 +88,8 @@ public class CloudSimExample7 {
 		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
 
 		for(int i=0;i<cloudlets;i++){
-			cloudlet[i] = new Cloudlet(idShift + i, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Random rObj = new Random();
+			cloudlet[i] = new Cloudlet(idShift + i, (length + rObj.nextInt(2000)), pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			// setting the owner of these Cloudlets
 			cloudlet[i].setUserId(userId);
 			list.add(cloudlet[i]);
@@ -316,7 +319,7 @@ public class CloudSimExample7 {
 
 				Log.printLine( indent + indent + cloudlet.getResourceId() + indent + indent + indent + cloudlet.getVmId() +
 						indent + indent + indent + dft.format(cloudlet.getActualCPUTime()) +
-						indent + indent + dft.format(cloudlet.getExecStartTime())+ indent + indent + indent + dft.format(cloudlet.getFinishTime()));
+						indent + indent + dft.format(cloudlet.getExecStartTime())+ indent + indent + indent + dft.format(cloudlet.getFinishTime())+indent+indent+cloudlet.getCloudletLength());
 			}
 		}
 

@@ -112,7 +112,7 @@ public class NetworkExample2 {
 			for(int i=0;i<cloudlets;i++){
 				Random rObj = new Random();
 				
-				cloudlet[i] = new Cloudlet(idShift+i, (length+showRandomInteger(START, END,rObj)),2.0,3.0,0, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+				cloudlet[i] = new Cloudlet(idShift+i,(length+showRandomInteger(START, END,rObj)), pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 				// setting the owner of these Cloudlets
 				cloudlet[i].setUserId(userId);
 				list.add(cloudlet[i]);
@@ -153,7 +153,7 @@ public class NetworkExample2 {
 			vmlist = new ArrayList<Vm>();
 
 			//VM description
-			int vmid = 1;
+			int vmid = 0;
 			int mips = 8000;
 			long size = 10000; //image size (MB)
 			int ram = 512; //vm memory (MB)
@@ -338,7 +338,7 @@ public class NetworkExample2 {
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		try {
-			datacenter = new Datacenter(name,0,characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -372,7 +372,7 @@ public class NetworkExample2 {
 		Log.printLine();
 		Log.printLine("========== OUTPUT ==========");
 		Log.printLine("Cloudlet ID" + indent + "STATUS" + indent +
-				"Base Station" + indent + "VM ID" + indent +"  "+ "Time" + indent +"  "+ "Start Time" + indent + "Finish Time" + indent+"Cloudlet length");
+				"Data center ID" + indent + "VM ID" + indent +"  "+ "Time" + indent +"  "+ "Start Time" + indent + "Finish Time" + indent+"Cloudlet length");
 
 		for (int i = 0; i < size; i++) {
 			cloudlet = list.get(i);
@@ -382,7 +382,7 @@ public class NetworkExample2 {
 				Log.print("SUCCESS");
 
 				DecimalFormat dft = new DecimalFormat("###.##");
-				Log.printLine( indent  + cloudlet.getResourceName(cloudlet.getResourceId()) + indent + indent + cloudlet.getVmId() +
+				Log.printLine( indent + indent + cloudlet.getResourceId() + indent + indent + indent +indent+ cloudlet.getVmId() +
 						indent + indent + dft.format(cloudlet.getActualCPUTime()) + indent + indent + dft.format(cloudlet.getExecStartTime())+
 						indent + indent + dft.format(cloudlet.getFinishTime())+indent+indent+indent+cloudlet.getCloudletLength());
 			}

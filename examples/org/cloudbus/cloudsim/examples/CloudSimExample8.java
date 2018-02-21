@@ -46,6 +46,10 @@ public class CloudSimExample8 {
 
 	/** The cloudlet list. */
 	private static List<Cloudlet> cloudletList;
+	
+	private static List<Cloudlet> cloudletList2; //added by OOA
+	private static List<Vm> vmList2; //added by OOA
+
 
 	/** The vmList. */
 	private static List<Vm> vmList;
@@ -132,13 +136,16 @@ public class CloudSimExample8 {
 			//Fourth step: Create VMs and Cloudlets and send them to broker
 			vmList = createVM(brokerId, 5, 0); //creating 5 vms
 			cloudletList = createCloudlet(brokerId, 10, 0); // creating 10 cloudlets
-
+			
+	
 			broker.submitVmList(vmList);
 			broker.submitCloudletList(cloudletList);
 
 			// Fifth step: Starts the simulation
 			CloudSim.startSimulation();
 
+			
+			
 			// Final step: Print results when simulation is over
 			List<Cloudlet> newList = broker.getCloudletReceivedList();
 			newList.addAll(globalBroker.getBroker().getCloudletReceivedList());

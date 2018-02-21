@@ -44,6 +44,16 @@ public class Cloudlet {
 	
 	private double vSpeed;
 	
+	private String taskType;
+	
+	public String getTaskType() {
+		return taskType;
+	}
+
+	public void setTaskType(String taskType) {
+		this.taskType = taskType;
+	}
+
 	private int vHD;
 
 	public int getvHD() {
@@ -221,6 +231,7 @@ public class Cloudlet {
 	 * @post $none
 	 */
 	public Cloudlet(
+			final String taskType,
 			final int cloudletId,
 			final long cloudletLength,
 			final double deadline,
@@ -254,6 +265,7 @@ public class Cloudlet {
 		this.xVal = xVal;
 		this.vSpeed = vSpeed;
 		this.vHD = vHD;
+		this.taskType = taskType;
 	}
 
 	/**

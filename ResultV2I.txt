@@ -1,0 +1,127 @@
+
+Starting Simulation for V2I task processing...
+Number of Total trial : 3
+Load Balancer Status :true
+Scheduler Policy :Priority
+
+Trial No : 0
+
+========== OUTPUT ==========
+Cloudlet ID    STATUS        Data center ID        VM ID          Time        Task Length        Start Time    Finish Time        Deadline        Priority
+    7        SUCCESS        BaseStation_0            1            0.74        1110            0.1            0.84                1.19        0.3042212640667041
+    3        SUCCESS        BaseStation_0            2            0.76        1136            10.1            10.86                1.1        0.33287108369807955
+    1        SUCCESS        BaseStation_0            3            0.76        1138            20.1            20.86                1.33        0.26447726129982396
+    11        SUCCESS        BaseStation_0            4            0.76        1143            30.1            30.86                1.27        0.2808316217783798
+    9        SUCCESS        BaseStation_0            5            0.76        1145            39.1            39.86                1.14        0.31981902181630395
+    10        SUCCESS        BaseStation_0            1            0.77        1160            47.1            47.87                1.04        0.35345468195878016
+    4        SUCCESS        BaseStation_0            2            0.79        1187            57.1            57.89                1.42        0.24171401689703648
+    6        SUCCESS        BaseStation_1            1001            0.56        1127            0.2            0.76                0.75        0.47236655274101474
+    15        SUCCESS        BaseStation_1            1002            0.59        1175            9.2            9.79                0.91        0.40252422403363597
+    13        SUCCESS        BaseStation_1            1003            0.59        1177            15.2            15.79                0.94        0.39062783535852114
+No of task not allocated : 0 Allocation miss rate : 0.0
+No of task missed deadline in Base Station 1 : 3
+No of task missed deadline in Base Station 2 : 2
+
+End of trail : 0
+Trial No : 1
+
+========== OUTPUT ==========
+Cloudlet ID    STATUS        Data center ID        VM ID          Time        Task Length        Start Time    Finish Time        Deadline        Priority
+    7        SUCCESS        BaseStation_0            1            0.74        1110            0.1            0.84                1.14        0.31981902181630395
+    6        SUCCESS        BaseStation_0            2            0.75        1127            2.1            2.85                1.45        0.23457028809379768
+    10        SUCCESS        BaseStation_0            3            0.77        1160            7.1            7.87                1.17        0.31036694126548503
+    8        SUCCESS        BaseStation_0            4            0.77        1162            12.1            12.87                1.42        0.24171401689703648
+    5        SUCCESS        BaseStation_0            5            0.78        1170            19.1            19.88                1.08        0.33959552564493917
+    15        SUCCESS        BaseStation_0            1            0.78        1175            29.1            29.88                1.2        0.30119421191220214
+    14        SUCCESS        BaseStation_0            2            0.79        1192            33.1            33.89                1.35        0.2592402606458915
+    13        SUCCESS        BaseStation_1            1001            0.59        1177            0.2            0.79                1.0        0.36787944117144233
+    3        SUCCESS        BaseStation_2            2001            0.38        1136            0.3            0.68                0.81        0.4448580662229411
+No of task not allocated : 0 Allocation miss rate : 0.0
+No of task missed deadline in Base Station 1 : 5
+No of task missed deadline in Base Station 2 : 1
+
+End of trail : 1
+Trial No : 2
+
+========== OUTPUT ==========
+Cloudlet ID    STATUS        Data center ID        VM ID          Time        Task Length        Start Time    Finish Time        Deadline        Priority
+    7        SUCCESS        BaseStation_0            1            0.74        1110            0.1            0.84                1.25        0.2865047968601901
+    1        SUCCESS        BaseStation_0            2            0.76        1138            1.1            1.86                1.11        0.32955896107518906
+    11        SUCCESS        BaseStation_0            3            0.76        1143            7.1            7.86                1.03        0.3570069605691474
+    5        SUCCESS        BaseStation_0            4            0.78        1170            9.1            9.88                1.2        0.30119421191220214
+    15        SUCCESS        BaseStation_0            5            0.78        1175            17.1            17.88                1.23        0.2922925776808594
+    12        SUCCESS        BaseStation_0            1            0.8        1194            24.1            24.9                1.12        0.32627979462303947
+    2        SUCCESS        BaseStation_1            1001            0.58        1153            0.2            0.78                0.84        0.43171052342907973
+    3        SUCCESS        BaseStation_2            2001            0.38        1136            0.3            0.68                0.81        0.4448580662229411
+    9        SUCCESS        BaseStation_2            2002            0.38        1145            9.3            9.68                0.86        0.4231620823177488
+    14        SUCCESS        BaseStation_2            2003            0.4        1192            10.3            10.7                1.03        0.3570069605691474
+No of task not allocated : 0 Allocation miss rate : 0.0
+No of task missed deadline in Base Station 1 : 4
+No of task missed deadline in Base Station 2 : 1
+
+End of trail : 2
+V2I task processing finished!
+********************************************************************************************************
+
+Starting Simulation for V2I task processing...
+Number of Total trial : 3
+Load Balancer Status :true
+Scheduler Policy :SJF
+
+Trial No : 0
+
+========== OUTPUT ==========
+Cloudlet ID    STATUS        Data center ID        VM ID          Time        Task Length        Start Time    Finish Time        Deadline        Priority
+    7        SUCCESS        BaseStation_0            1            0.74        1110            0.1            0.84                1.44        0.2369277586821218
+    1        SUCCESS        BaseStation_0            2            0.76        1138            7.1            7.86                1.32        0.2671353019658504
+    11        SUCCESS        BaseStation_0            3            0.76        1143            8.1            8.86                1.27        0.2808316217783798
+    8        SUCCESS        BaseStation_0            4            0.77        1162            9.1            9.87                1.11        0.32955896107518906
+    5        SUCCESS        BaseStation_0            5            0.78        1170            18.1            18.88                1.28        0.27803730045319414
+    13        SUCCESS        BaseStation_0            1            0.78        1177            27.1            27.88                1.32        0.2671353019658504
+    4        SUCCESS        BaseStation_0            2            0.79        1187            30.1            30.89                1.11        0.32955896107518906
+    14        SUCCESS        BaseStation_0            3            0.79        1192            35.1            35.89                1.16        0.3134861808826053
+    6        SUCCESS        BaseStation_1            1001            0.56        1127            0.2            0.76                0.89        0.4106557527523455
+    10        SUCCESS        BaseStation_2            2001            0.39        1160            0.3            0.69                0.68        0.5066169923655895
+No of task not allocated : 0 Allocation miss rate : 0.0
+No of task missed deadline in Base Station 1 : 3
+No of task missed deadline in Base Station 2 : 2
+
+End of trail : 0
+Trial No : 1
+
+========== OUTPUT ==========
+Cloudlet ID    STATUS        Data center ID        VM ID          Time        Task Length        Start Time    Finish Time        Deadline        Priority
+    7        SUCCESS        BaseStation_0            1            0.74        1110            0.1            0.84                1.09        0.33621649370673334
+    6        SUCCESS        BaseStation_0            2            0.75        1127            3.1            3.85                1.18        0.30727873860113125
+    3        SUCCESS        BaseStation_0            3            0.76        1136            8.1            8.86                1.29        0.27527078308975234
+    2        SUCCESS        BaseStation_0            4            0.77        1153            13.1            13.87                1.04        0.35345468195878016
+    15        SUCCESS        BaseStation_0            5            0.78        1175            21.1            21.88                1.32        0.2671353019658504
+    12        SUCCESS        BaseStation_0            1            0.8        1194            22.1            22.9                1.06        0.34645581033005746
+    11        SUCCESS        BaseStation_1            1001            0.57        1143            0.2            0.77                0.85        0.4274149319487267
+    8        SUCCESS        BaseStation_1            1002            0.58        1162            9.2            9.78                0.83        0.4360492863215356
+    10        SUCCESS        BaseStation_2            2001            0.39        1160            0.3            0.69                0.96        0.38289288597511206
+    14        SUCCESS        BaseStation_2            2002            0.4        1192            4.3            4.7                1.01        0.3642189795715233
+No of task not allocated : 0 Allocation miss rate : 0.0
+No of task missed deadline in Base Station 1 : 3
+No of task missed deadline in Base Station 2 : 2
+
+End of trail : 1
+Trial No : 2
+
+========== OUTPUT ==========
+Cloudlet ID    STATUS        Data center ID        VM ID          Time        Task Length        Start Time    Finish Time        Deadline        Priority
+    7        SUCCESS        BaseStation_0            1            0.74        1110            0.1            0.84                1.21        0.2981972794298874
+    6        SUCCESS        BaseStation_0            2            0.75        1127            1.1            1.85                1.31        0.26982005638468687
+    1        SUCCESS        BaseStation_0            3            0.76        1138            5.1            5.86                1.1        0.33287108369807955
+    8        SUCCESS        BaseStation_0            4            0.77        1162            15.1            15.87                1.26        0.2836540264997704
+    12        SUCCESS        BaseStation_0            5            0.8        1194            25.1            25.9                1.45        0.23457028809379768
+    2        SUCCESS        BaseStation_1            1001            0.58        1153            0.2            0.78                0.81        0.4448580662229411
+    4        SUCCESS        BaseStation_1            1002            0.59        1187            4.2            4.79                0.75        0.47236655274101474
+    3        SUCCESS        BaseStation_2            2001            0.38        1136            0.3            0.68                0.76        0.46766642700990924
+No of task not allocated : 0 Allocation miss rate : 0.0
+No of task missed deadline in Base Station 1 : 3
+No of task missed deadline in Base Station 2 : 4
+
+End of trail : 2
+V2I task processing finished!
+********************************************************************************************************

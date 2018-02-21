@@ -16,7 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.CloudletSchedulerSpaceShared;
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterBroker;
@@ -30,7 +29,6 @@ import org.cloudbus.cloudsim.UtilizationModel;
 import org.cloudbus.cloudsim.UtilizationModelFull;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicySimple;
-import org.cloudbus.cloudsim.VmSchedulerSpaceShared;
 import org.cloudbus.cloudsim.VmSchedulerTimeShared;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
@@ -82,7 +80,7 @@ public class NetworkExample4 {
 
 			//VM description
 			int vmid = 0;
-			int mips = 500;
+			int mips = 250;
 			long size = 10000; //image size (MB)
 			int ram = 512; //vm memory (MB)
 			long bw = 1000;
@@ -90,7 +88,7 @@ public class NetworkExample4 {
 			String vmm = "Xen"; //VMM name
 
 			//create VM
-			Vm vm1 = new Vm(vmid, brokerId, mips, pesNumber, ram, bw, size, vmm, new CloudletSchedulerSpaceShared());
+			Vm vm1 = new Vm(vmid, brokerId, mips, pesNumber, ram, bw, size, vmm, new CloudletSchedulerTimeShared());
 
 			//add the VM to the vmList
 			vmlist.add(vm1);
@@ -109,7 +107,7 @@ public class NetworkExample4 {
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
 
-			Cloudlet cloudlet1 = new Cloudlet(id, length,0.4,0.3,2, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			cloudlet1.setUserId(brokerId);
 
 			//add the cloudlet to the list
@@ -196,7 +194,7 @@ public class NetworkExample4 {
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		try {
-			datacenter = new Datacenter(name,0, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -54,7 +54,7 @@ public class SimEvent implements Cloneable, Comparable<SimEvent> {
 	 * Create a blank event.
 	 */
 	public SimEvent() {
-		etype = ENULL;
+		etype = ENULL; // internal event
 		time = -1L;
 		endWaitingTime = -1.0;
 		entSrc = -1;

@@ -118,10 +118,10 @@ public class NetworkExample3 {
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
 
-			Cloudlet cloudlet1 = new Cloudlet(id,2130,2.3,1.2,length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			cloudlet1.setUserId(brokerId1);
 
-			Cloudlet cloudlet2 = new Cloudlet(id,2130,2.3,1.2,length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			cloudlet2.setUserId(brokerId2);
 
 			//add the cloudlets to the lists: each cloudlet belongs to one user
@@ -235,7 +235,7 @@ public class NetworkExample3 {
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		try {
-			datacenter = new Datacenter(name,2.0,characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

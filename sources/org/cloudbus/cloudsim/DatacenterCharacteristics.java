@@ -74,6 +74,9 @@ public class DatacenterCharacteristics {
 
 	/** The cost per storage. */
 	private double costPerStorage;
+	
+	/** Communication medium of Base Station */
+	private String comMedium;
 
 	/** The cost per bw. */
 	private double costPerBw;

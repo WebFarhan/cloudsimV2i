@@ -99,35 +99,19 @@ public class CloudSimExample1 {
 			// Fifth step: Create one Cloudlet
 			cloudletList = new ArrayList<Cloudlet>();
 
-			// Cloudlet properties for cloudlet1
-			int id2 = 1;
-			long length2 = 300000;
-			long fileSize2 = 400;
-			long outputSize2 = 400;
-			UtilizationModel utilizationModel2 = new UtilizationModelFull();
-			
-			Cloudlet cloudlet2 = new Cloudlet(id2, 2,length2, pesNumber, fileSize2, outputSize2, utilizationModel2, utilizationModel2, utilizationModel2);
-			cloudlet2.setUserId(brokerId);
-			cloudlet2.setVmId(vmid);
-
-			// add the cloudlet to the list
-			cloudletList.add(cloudlet2);
-			
-			
-			
-			// Cloudlet properties for cloudlet1
+			// Cloudlet properties
 			int id = 0;
 			long length = 400000;
 			long fileSize = 300;
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
 
-			Cloudlet cloudlet1 = new Cloudlet(id,2 ,length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-			cloudlet1.setUserId(brokerId);
-			cloudlet1.setVmId(vmid);
+			Cloudlet cloudlet = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			cloudlet.setUserId(brokerId);
+			cloudlet.setVmId(vmid);
 
 			// add the cloudlet to the list
-			cloudletList.add(cloudlet1);
+			cloudletList.add(cloudlet);
 
 			// submit cloudlet list to the broker
 			broker.submitCloudletList(cloudletList);

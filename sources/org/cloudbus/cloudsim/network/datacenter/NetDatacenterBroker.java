@@ -315,12 +315,16 @@ public class NetDatacenterBroker extends SimEntity {
 		}
 		int k = 0;
 
+		
+		
 		// schedule the application on VMs
 		for (AppCloudlet app : this.getAppCloudletList()) {
 
 			List<Integer> vmids = new ArrayList<Integer>();
 			int numVms = linkDC.getVmList().size();
 			UniformDistr ufrnd = new UniformDistr(0, numVms, 5);
+			
+			
 			for (int i = 0; i < app.numbervm; i++) {
 
 				int vmid = (int) ufrnd.sample();

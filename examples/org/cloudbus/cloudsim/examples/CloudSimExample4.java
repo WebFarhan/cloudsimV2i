@@ -112,11 +112,11 @@ public class CloudSimExample4 {
 			long outputSize = 300;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
 
-			Cloudlet cloudlet1 = new Cloudlet(id,2, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			cloudlet1.setUserId(brokerId);
 
 			id++;
-			Cloudlet cloudlet2 = new Cloudlet(id,2, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+			Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 			cloudlet2.setUserId(brokerId);
 
 			//add the cloudlets to the list
@@ -242,7 +242,7 @@ public class CloudSimExample4 {
 		Log.printLine();
 		Log.printLine("========== OUTPUT ==========");
 		Log.printLine("Cloudlet ID" + indent + "STATUS" + indent +
-				"Data center ID" + indent + "VM ID" + indent + "Time" + indent + "Start Time" + indent + "Finish Time");
+				"Data center" + indent + "VM ID" + indent + "Time" + indent + "Start Time" + indent + "Finish Time");
 
 		DecimalFormat dft = new DecimalFormat("###.##");
 		for (int i = 0; i < size; i++) {
@@ -252,7 +252,7 @@ public class CloudSimExample4 {
 			if (cloudlet.getCloudletStatus() == Cloudlet.SUCCESS){
 				Log.print("SUCCESS");
 
-				Log.printLine( indent + indent + cloudlet.getResourceId() + indent + indent + indent + cloudlet.getVmId() +
+				Log.printLine( indent + indent + cloudlet.getResourceName(cloudlet.getResourceId()) + indent + indent + indent + cloudlet.getVmId() +
 						indent + indent + dft.format(cloudlet.getActualCPUTime()) + indent + indent + dft.format(cloudlet.getExecStartTime())+
 						indent + indent + dft.format(cloudlet.getFinishTime()));
 			}

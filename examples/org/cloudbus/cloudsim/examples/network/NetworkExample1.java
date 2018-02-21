@@ -16,6 +16,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.cloudbus.cloudsim.Cloudlet;
+import org.cloudbus.cloudsim.CloudletSchedulerDynamicWorkload;
+import org.cloudbus.cloudsim.CloudletSchedulerSpaceShared;
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterBroker;
@@ -76,8 +78,8 @@ public class NetworkExample1 {
 			//Fourth step: Create one virtual machine
 			vmlist = new ArrayList<Vm>();
 
-			//VM description
-			int vmid = 0;
+			//VM1 description
+			int vmid = 1;
 			int mips = 250;
 			long size = 10000; //image size (MB)
 			int ram = 512; //vm memory (MB)
@@ -85,20 +87,62 @@ public class NetworkExample1 {
 			int pesNumber = 1; //number of cpus
 			String vmm = "Xen"; //VMM name
 
-			//create VM
-			Vm vm1 = new Vm(vmid, brokerId, mips, pesNumber, ram, bw, size, vmm, new CloudletSchedulerTimeShared());
+			//create VM1
+			Vm vm1 = new Vm(vmid, brokerId, mips, pesNumber, ram, bw, size, vmm, new CloudletSchedulerDynamicWorkload(350,1));
 
-			//add the VM to the vmList
+			//add the VM1 to the vmList
 			vmlist.add(vm1);
 
 			//submit vm list to the broker
+			//broker.submitVmList(vmlist);
+			
+			
+			
+			//VM2 description
+			int vmid2 = 2;
+			int mips2 = 500;//doubled than VM1
+			long size2 = 10000; //image size (MB)
+			int ram2 = 512; //vm memory (MB)
+			long bw2 = 1000;
+			int pesNumber2 = 1; //number of cpus
+			String vmm2 = "Xen2"; //VMM name
+
+			//create VM1
+			Vm vm2 = new Vm(vmid2, brokerId, mips2, pesNumber2, ram2, bw2, size2, vmm2, new CloudletSchedulerSpaceShared());
+
+			//add the VM1 to the vmList
+			vmlist.add(vm2);
+
+			//submit vm list to the broker
+			//broker.submitVmList(vmlist);
+			
+			
+			
+			//VM3 description
+			//int vmid3 = 2;
+			//int mips3 = 600;
+			//long size3 = 10000; //image size (MB)
+			//int ram3 = 512; //vm memory (MB)
+			//long bw3 = 1000;
+			//int pesNumber3 = 1; //number of cpus
+			//String vmm3 = "Xen3"; //VMM name
+
+			//create VM1
+			//Vm vm3 = new Vm(vmid3, brokerId, mips3, pesNumber3, ram3, bw3, size3, vmm3, new CloudletSchedulerSpaceShared());
+
+			//add the VM1 to the vmList
+			//vmlist.add(vm3);
+
+			
+			
+			//submit vms list to the broker
 			broker.submitVmList(vmlist);
-
-
+			
+			
 			//Fifth step: Create one Cloudlet
 			cloudletList = new ArrayList<Cloudlet>();
 
-			//Cloudlet properties
+			//Cloudlet1 properties
 			int id = 0;
 			long length = 40000;
 			long fileSize = 300;
@@ -110,13 +154,54 @@ public class NetworkExample1 {
 
 			//add the cloudlet to the list
 			cloudletList.add(cloudlet1);
-
+			
+			//Cloudlet2 properties
+			long length2 = 40000;
+			long fileSize2 = 300;
+			long outputSize2 = 300;
+			UtilizationModel utilizationModel2 = new UtilizationModelFull();
+			
+			Cloudlet cloudlet2 = new Cloudlet(1, length2, pesNumber, fileSize2, outputSize2, utilizationModel2, utilizationModel2, utilizationModel2);
+			cloudlet2.setUserId(brokerId);
+			
+			//add the cloudlet to the list
+			cloudletList.add(cloudlet2);
+			
+			
+			//Cloudlet3 properties
+			long length3 = 20000;
+			long fileSize3 = 300;
+			long outputSize3 = 300;
+			UtilizationModel utilizationModel3 = new UtilizationModelFull();
+			
+			Cloudlet cloudlet3 = new Cloudlet(3, length3, pesNumber, fileSize3, outputSize3, utilizationModel3, utilizationModel3, utilizationModel3);
+			cloudlet3.setUserId(brokerId);
+			
+			cloudlet3.setVmId(vmid2);	// cloudlet id 3 is assigned to vmid2
+			//add the cloudlet to the list
+			cloudletList.add(cloudlet3);
+			
+			//Cloudlet4 properties
+			long length4 = 20000;
+			long fileSize4 = 300;
+			long outputSize4 = 300;
+			UtilizationModel utilizationModel4 = new UtilizationModelFull();
+			
+			Cloudlet cloudlet4 = new Cloudlet(4, length4, pesNumber, fileSize4, outputSize4, utilizationModel4, utilizationModel4, utilizationModel4);
+			cloudlet4.setUserId(brokerId);
+			
+			cloudlet4.setVmId(vmid);	// cloudlet id 4 is assigned to vmid2
+			//add the cloudlet to the list
+			cloudletList.add(cloudlet4);
+			
+			
 			//submit cloudlet list to the broker
 			broker.submitCloudletList(cloudletList);
 
+			
 			//Sixth step: configure network
 			//load the network topology file
-			NetworkTopology.buildNetworkTopology("examples\\org\\cloudbus\\cloudsim\\examples\\network\\topology.brite"); // Edited by Razin
+			NetworkTopology.buildNetworkTopology("topology.brite");
 
 			//maps CloudSim entities to BRITE entities
 			//PowerDatacenter will correspond to BRITE node 0

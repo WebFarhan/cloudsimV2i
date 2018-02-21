@@ -115,11 +115,11 @@ public class CloudSimExample2 {
 	            	long outputSize = 300;
 	            	UtilizationModel utilizationModel = new UtilizationModelFull();
 
-	            	Cloudlet cloudlet1 = new Cloudlet(id,2 ,length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+	            	Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 	            	cloudlet1.setUserId(brokerId);
 
 	            	id++;
-	            	Cloudlet cloudlet2 = new Cloudlet(id,2 ,length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+	            	Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
 	            	cloudlet2.setUserId(brokerId);
 
 	            	//add the cloudlets to the list

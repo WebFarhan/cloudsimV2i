@@ -19,9 +19,11 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
-//import org.cloudbus.cloudsim.examples.VTasks;
+import org.cloudbus.cloudsim.examples.VTasks;
 import org.cloudbus.cloudsim.lists.CloudletList;
 import org.cloudbus.cloudsim.lists.VmList;
+
+
 
 /**
  * DatacentreBroker represents a broker acting on behalf of a user. It hides VM management, as vm
@@ -44,7 +46,7 @@ public class DatacenterBroker extends SimEntity {
 	
 	
 	/** The vtasks list. */
-	//protected List<? extends VTasks> vtaskList;
+	protected List<? extends VTasks> vtaskList;
 	
 	
 
@@ -53,7 +55,7 @@ public class DatacenterBroker extends SimEntity {
 	
 	
 	/** The vtasks submitted list. */
-	//protected List<? extends VTasks> vtaskSubmittedList;
+	protected List<? extends VTasks> vtaskSubmittedList;
 	
 	
 
@@ -64,9 +66,17 @@ public class DatacenterBroker extends SimEntity {
 	
 	
 	/** The vtasks received list. */
-	//protected List<? extends VTasks> vtaskReceivedList;
+	protected List<? extends VTasks> vtaskReceivedList;
 	
-	
+	protected String schedulerPolicy;
+
+	public String getSchedulerPolicy() {
+		return schedulerPolicy;
+	}
+
+	public void setSchedulerPolicy(String schedulerPolicy) {
+		this.schedulerPolicy = schedulerPolicy;
+	}
 
 	/** The cloudlets submitted. */
 	protected int cloudletsSubmitted;
@@ -396,73 +406,184 @@ public class DatacenterBroker extends SimEntity {
 	    return randomNumber;
 	  }
 	
-	//FCFS alogorithm implementation
-	/*
-	protected List<Cloudlet> FCFS(){
-			
-			List<Cloudlet> fCFSsortList = new ArrayList<Cloudlet>();
-			
-			ArrayList<Cloudlet> fCFStempList = new ArrayList<Cloudlet>();
-			
-			//adding
-		    for (Cloudlet cloudlet : getCloudletList()) {
-		    	fCFStempList.add(cloudlet);
-		    	
-		    	
-			}
-		    
-		    int sjftotalCloudlets = fCFStempList.size();
-			
-			for(int i=0;i<sjftotalCloudlets;i++) {
-				Cloudlet earliestCloudlet = fCFStempList.get(0);
-
-				for(Cloudlet checkCloudlet:fCFStempList) {
-					if(earliestCloudlet.get >checkCloudlet.getCloudletLength()) {
-						earliestCloudlet = checkCloudlet;
-					}
-				}
-				
-				fCFSsortList.add(earliestCloudlet);
-				fCFStempList.remove(earliestCloudlet);
-			}
-			
-			return fCFSsortList;
-			
+	
+	/**
+	 * Submit cloudlets to the created VMs.
+	 * 
+	 * @pre $none
+	 * @post $none
+	 */
+	protected void submitCloudlets() {
+		int vmIndex = 0;
+		int delay = 0; // delay for submission cloudlets
+		Random randomDelay = new Random();// random delay generator object
+		
+	    List<Cloudlet> sortList = new ArrayList<Cloudlet>();
+		
+		//List<VTasks> sortList = new ArrayList<VTasks>();
+		ArrayList<Cloudlet> tempList = new ArrayList<Cloudlet>();
+		
+		//adding cloudlets to templist for sorting
+		for (Cloudlet cloudlet : getCloudletList()) {
+			tempList.add(cloudlet);
 		}
-	
-	
-	*/
-	
-	
-	//SJF alogorithm implementation
-	protected List<Cloudlet> SJF(){
 		
-		List<Cloudlet> sJFsortList = new ArrayList<Cloudlet>();
 		
-		ArrayList<Cloudlet> sjftempList = new ArrayList<Cloudlet>();
+		int totalCloudlets = tempList.size();
 		
-		//adding
-	    for (Cloudlet cloudlet : getCloudletList()) {
-					sjftempList.add(cloudlet);
-		}
-	    
-	    int sjftotalCloudlets = sjftempList.size();
-		
-		for(int i=0;i<sjftotalCloudlets;i++) {
-			Cloudlet smallestCloudlet = sjftempList.get(0);
-			for(Cloudlet checkCloudlet:sjftempList) {
+		//sorting the cloudlets from small to big in cloudlet length
+		for(int i=0;i<totalCloudlets;i++) {
+			Cloudlet smallestCloudlet = tempList.get(0);
+			for(Cloudlet checkCloudlet:tempList) {
 				if(smallestCloudlet.getCloudletLength()>checkCloudlet.getCloudletLength()) {
 					smallestCloudlet = checkCloudlet;
 				}
 			}
 			
-			sJFsortList.add(smallestCloudlet);
-			sjftempList.remove(smallestCloudlet);
+			sortList.add(smallestCloudlet);
+			tempList.remove(smallestCloudlet);
 		}
 		
-		return sJFsortList;
 		
+		// for debugging purpose
+		int count = 1;
+		for(Cloudlet printCloudlet: sortList) {
+			Log.printLine(count+" Cloudlet ID: "+printCloudlet.getCloudletId()+", Cloudlet Length: "+printCloudlet.getCloudletLength());
+			count++;
+		}
+		
+		
+		//for (Cloudlet cloudlet : getCloudletList())
+		//for debugging purpose
+		for(Vm virm: getVmsCreatedList()) {
+			//if(virm.getMips()>cloudlet.getCloudletLength()) {// this condition decides vms capacity for assiging task to vm
+				//cloudlet.setVmId(virm.getId()); // May be this is the point where task assignment need to be done
+				
+				Log.printLine("Vm ID : " +virm.getId()+" Mips of Vm : "+virm.getMips());
+			//}
+	
+		}
+		
+		
+		List<Cloudlet> SC_policy_Que = new ArrayList<Cloudlet>();
+		
+		if(schedulerPolicy =="SJF") {
+			
+			SC_policy_Que = SortedbySJF();
+		}
+		else if(schedulerPolicy=="Priority")
+		{
+			SC_policy_Que = PrioritySchedule();
+			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!Priortity scheduling!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		}
+		else {
+			SC_policy_Que = sortList;
+		}
+		
+		//List<Cloudlet> sjfList =  SortedbySJF();
+		
+		//sortList sorted by cloudlets size
+		
+		//sorted by cloudlets shortest execution time
+		
+		for (Cloudlet cloudlet : SC_policy_Que) {// using the sorted array ... edited by razin
+			Vm vm;
+			
+			// if user didn't bind this cloudlet and it has not been executed yet
+			if (cloudlet.getVmId() == -1) {
+				vm = getVmsCreatedList().get(vmIndex);
+			} else { // submit to the specific vm
+				
+				
+				vm = VmList.getById(getVmsCreatedList(), cloudlet.getVmId());
+				if (vm == null) { // vm was not created
+					Log.printLine(CloudSim.clock() + ": " + getName() + ": Postponing execution of cloudlet "
+							+ cloudlet.getCloudletId() + ": bount VM not available");
+					continue;
+				}
+			}
+
+			Log.printLine(CloudSim.clock() + ": " + getName() + ": Sending cloudlet "
+					+ cloudlet.getCloudletId() + " to VM #" + vm.getId());
+			
+
+			
+			Log.printLine("******************* Vm ID : " +vm.getId()+" Mips of Vm : "+vm.getMips()+" Cloudlet ID "+ cloudlet.getCloudletId()+" cloudlet size : "+cloudlet.getCloudletLength());
+	
+			cloudlet.setVmId(vm.getId()); 	
+			schedule(getVmsToDatacentersMap().get(vm.getId()),delay ,CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
+			Log.printLine("**** Cloudlet ID : "+cloudlet.getCloudletId()+" Cloudlet status ====  "+cloudlet.getCloudletFinishedSoFar());
+			cloudletsSubmitted++;
+			vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
+			
+			//getVTasksSubmittedList().add(vtask);
+			
+			getCloudletSubmittedList().add(cloudlet);
+			
+			//System.out.println("Poisson number : "+getPoisson(showDelayRandomInteger(1,10,randomDelay)));
+			delay=delay+showDelayRandomInteger(1,10,randomDelay); // adding delay randomly between 1 to 10 seconds 
+		
+			}
+			
+			
+		//}
+
+		// remove submitted cloudlets from waiting list
+		for (Cloudlet cloudlet : getCloudletSubmittedList()) {
+			getCloudletList().remove(cloudlet);
+		}
 	}
+	
+	
+	
+	//sorted by cloudlet's estimated shortest execution time (SJF)
+	public List<Cloudlet> SortedbySJF() {
+		
+		List<Cloudlet> lstCloudlets = getCloudletList();
+		//lstCloudlets= getCloudletList();
+		//setCloudletList(lstCloudlets);
+		int reqTasks=lstCloudlets.size();
+		int reqVms=vmList.size();
+		ArrayList<Double> executionTimeList = new ArrayList<Double>();
+	    //  System.out.println("\n\t PRIORITY  Broker Schedules\n");
+	    // System.out.println("Before ordering");
+        for (int i=0;i<reqTasks;i++)
+          {
+            executionTimeList.add(( lstCloudlets.get(i).getCloudletLength())/ (lstCloudlets.get(i).getNumberOfPes() * vmList.get(i%reqVms).getMips()) );
+            System.out.println("CLOUDLET ID" + " " +lstCloudlets.get(i).getCloudletId() +" EXE TIME   " +  executionTimeList.get(i));
+
+	      }
+	     
+        for(int i=0;i<reqTasks;i++)
+	    {
+	       for (int j=i+1;j<reqTasks;j++)
+	          {
+	           if (executionTimeList.get(i) > executionTimeList.get(j))
+	           {
+		           Cloudlet temp1 = lstCloudlets.get(i);
+		           lstCloudlets.set(i, lstCloudlets.get(j));
+			       lstCloudlets.set(j, temp1);    
+			                                    
+			       double temp2 = executionTimeList.get(i);
+			       executionTimeList.set(i, executionTimeList.get(j));
+			       executionTimeList.set(j, temp2);
+
+		       }
+
+		      }
+		 }
+
+		 setCloudletList(lstCloudlets);
+		 
+		System.out.println("After  ordering");
+       for(int i=0;i<reqTasks;i++) {
+        	 
+	         System.out.println(" CLOUDLET ID" + " " +lstCloudlets.get(i).getCloudletId() +" EXE TIME   " +  executionTimeList.get(i));
+         }
+
+		 return lstCloudlets;
+	        
+       }//end of SJF
 	
 	//
 	protected List<Cloudlet> PrioritySchedule(){
@@ -493,206 +614,6 @@ public class DatacenterBroker extends SimEntity {
 		return prSortList;
 		
 	}
-	
-	
-	/**
-	 * Submit cloudlets to the created VMs.
-	 * 
-	 * @pre $none
-	 * @post $none
-	 */
-	protected void submitCloudlets() {
-		int vmIndex = 0;
-		int delay = 0; // delay for submission cloudlets
-		Random randomDelay = new Random();// random delay generator object
-		
-		
-	    List<Cloudlet> sortList = new ArrayList<Cloudlet>();
-		
-		//List<VTasks> sortList = new ArrayList<VTasks>();
-		ArrayList<Cloudlet> tempList = new ArrayList<Cloudlet>();
-
-		//adding
-		for (Cloudlet cloudlet : getCloudletList()) {
-			tempList.add(cloudlet);
-		}
-		
-		
-		int totalCloudlets = tempList.size();
-
-		//sorting the cloudlets from small to big in cloudlet length
-		/*
-		for(int i=0;i<totalCloudlets;i++) {
-			Cloudlet smallestCloudlet = tempList.get(0);
-			for(Cloudlet checkCloudlet:tempList) {
-				if(smallestCloudlet.getCloudletLength()>checkCloudlet.getCloudletLength()) {
-					smallestCloudlet = checkCloudlet;
-				}
-			}
-			
-			sortList.add(smallestCloudlet);
-			tempList.remove(smallestCloudlet);
-		}
-		*/
-		
-		//sorting the cloudlets according to priority
-		/*
-		for(int i=0;i<totalCloudlets;i++) {
-			Cloudlet highestPriorityCloudlet = tempList.get(0);
-			for(Cloudlet checkCloudlet:tempList) {
-				if(highestPriorityCloudlet.getPriority()<checkCloudlet.getPriority()) {
-					highestPriorityCloudlet = checkCloudlet;
-				}
-			}
-			
-			sortList.add(highestPriorityCloudlet);
-			tempList.remove(highestPriorityCloudlet);
-		}
-		*/
-		
-		// for debugging purpose
-		int count = 1;
-		
-		
-		List<Cloudlet> reieveListSJF = new ArrayList<Cloudlet>();
-		List<Cloudlet> reieveListPR = new ArrayList<Cloudlet>();
-		List<Cloudlet> reieveListFCFS = getCloudletList();
-		
-		reieveListSJF = SJF();
-		reieveListPR = PrioritySchedule();
-		
-		for(Cloudlet printCloudlet: reieveListPR) {
-			Log.printLine(count+" Cloudlet ID: "+printCloudlet.getCloudletId()+", Cloudlet Length: "+printCloudlet.getCloudletLength()+ ", Cloudlet Priority: "+printCloudlet.getPriority());
-			count++;
-		}
-		
-		
-		//for (Cloudlet cloudlet : getCloudletList())
-		//for debugging purpose
-		for(Vm virm: getVmsCreatedList()) {
-			//if(virm.getMips()>cloudlet.getCloudletLength()) {// this condition decides vms capacity for assiging task to vm
-				//cloudlet.setVmId(virm.getId()); // May be this is the point where task assignment need to be done
-				
-				Log.printLine("Vm ID : " +virm.getId()+" Mips of Vm : "+virm.getMips());
-			//}
-	
-		}
-		
-		
-		for (Cloudlet cloudlet : reieveListPR) {
-			Vm vm;
-			
-			// if user didn't bind this cloudlet and it has not been executed yet
-			if (cloudlet.getVmId() == -1) {
-				vm = getVmsCreatedList().get(vmIndex);
-			} else { // submit to the specific vm
-				
-				vm = VmList.getById(getVmsCreatedList(), cloudlet.getVmId());
-				if (vm == null) { // vm was not created
-					Log.printLine(CloudSim.clock() + ": " + getName() + ": Postponing execution of cloudlet "
-							+ cloudlet.getCloudletId() + ": bount VM not available");
-					continue;
-				}
-			}
-
-			Log.printLine(CloudSim.clock() + ": " + getName() + ": Sending cloudlet "
-					+ cloudlet.getCloudletId() + " to VM #" + vm.getId());
-			
-			
-	
-			
-			//for(Vm virm: getVmsCreatedList()) {
-				//if(virm.getMips()>cloudlet.getCloudletLength()) {// this condition decides vms capacity for assiging task to vm
-					//cloudlet.setVmId(virm.getId()); // May be this is the point where task assignment need to be done
-					
-					//Log.printLine("Vm ID : " +virm.getId()+" Mips of Vm : "+virm.getMips());
-				//}
-		
-			//}
-			/*
-			for(Vm checkVm: getVmsCreatedList()) {
-				
-				
-				if(checkVm.getMips()>cloudlet.getCloudletLength()) {// this condition decides vms capacity for assiging task to vm
-					cloudlet.setVmId(checkVm.getId()); // May be this is the point where task assignment need to be done
-					Log.printLine("******************* Vm ID : " +checkVm.getId()+" Mips of Vm : "+checkVm.getMips()+" Cloudlet ID "+ cloudlet.getCloudletId()+" cloudlet size : "+cloudlet.getCloudletLength());
-					schedule(getVmsToDatacentersMap().get(checkVm.getId()),delay ,CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
-				
-					Log.printLine("**** Cloudlet ID : "+cloudlet.getCloudletId()+" Cloudlet status ====  "+cloudlet.getCloudletFinishedSoFar());
-					cloudletsSubmitted++;
-					vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
-					getCloudletSubmittedList().add(cloudlet);
-					delay=delay+showDelayRandomInteger(1,10,randomDelay); // adding delay randomly between 1 to 10 seconds
-					break;
-				}
-				else {
-					continue;
-				}
-				
-				
-				//sendNow(getVmsToDatacentersMap().get(vm.getId()), CloudSimTags.CLOUDLET_SUBMIT, cloudlet);
-				
-				//schedule(getVmsToDatacentersMap().get(checkVm.getId()),delay ,CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
-				//Log.printLine("**** Cloudlet ID : "+cloudlet.getCloudletId()+" Cloudlet status ====  "+cloudlet.getCloudletFinishedSoFar());
-				//cloudletsSubmitted++;
-				//vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
-				//getCloudletSubmittedList().add(cloudlet);
-				
-				//System.out.println("Poisson number : "+getPoisson(showDelayRandomInteger(1,10,randomDelay)));
-				//delay=delay+showDelayRandomInteger(1,10,randomDelay); // adding delay randomly between 1 to 10 seconds 
-				
-			
-			}*/
-			
-			
-			Log.printLine("******************* Vm ID : " +vm.getId()+" Mips of Vm : "+vm.getMips()+" Cloudlet ID "+ cloudlet.getCloudletId()+" cloudlet size : "+cloudlet.getCloudletLength());
-			
-			/*
-			if(cloudlet.getCloudletId()==3)
-			{
-				//cloudlet.setVmId(vm.getId()); 
-				int vmDestId = 4;
-				int[] array = {cloudlet.getCloudletId(), vm.getUserId(), vm.getId(), vmDestId, getId()};
-				send(getId(),delay,CloudSimTags.CLOUDLET_MOVE, array); 
-				
-				Log.printLine("**** Cloudlet ID : "+cloudlet.getCloudletId()+" Cloudlet status ====  "+cloudlet.getCloudletFinishedSoFar());
-				
-				cloudletsSubmitted++;
-				vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
-				
-				getCloudletSubmittedList().add(cloudlet);
-				
-				//System.out.println("Poisson number : "+getPoisson(showDelayRandomInteger(1,10,randomDelay)));
-				delay=delay+showDelayRandomInteger(1,10,randomDelay); // adding delay randomly between 1 to 10 seconds 
-				
-			}
-			else {*/
-			
-			cloudlet.setVmId(vm.getId()); 	
-			schedule(getVmsToDatacentersMap().get(vm.getId()),delay ,CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
-			Log.printLine("**** Cloudlet ID : "+cloudlet.getCloudletId()+" Cloudlet status ====  "+cloudlet.getCloudletFinishedSoFar());
-			cloudletsSubmitted++;
-			vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
-			
-			//getVTasksSubmittedList().add(vtask);
-			
-			getCloudletSubmittedList().add(cloudlet);
-			
-			//System.out.println("Poisson number : "+getPoisson(showDelayRandomInteger(1,10,randomDelay)));
-			delay=delay+showDelayRandomInteger(1,10,randomDelay); // adding delay randomly between 1 to 10 seconds 
-			
-			
-			}
-			
-			
-		//}
-
-		// remove submitted cloudlets from waiting list
-		for (Cloudlet cloudlet : getCloudletSubmittedList()) {
-			getCloudletList().remove(cloudlet);
-		}
-	}
-	
 	
 	public void dropCloudlet() {
 		
@@ -777,10 +698,10 @@ public class DatacenterBroker extends SimEntity {
 	}
 
 	//razin
-	//@SuppressWarnings("unchecked")
-	//public <T extends VTasks> List<T> getVTasksList() {
-	//	return (List<T>) vtaskList;
-	//}
+	@SuppressWarnings("unchecked")
+	public <T extends VTasks> List<T> getVTasksList() {
+		return (List<T>) vtaskList;
+	}
 	
 	
 	
@@ -801,14 +722,11 @@ public class DatacenterBroker extends SimEntity {
 	 * @param <T> the generic type
 	 * @param cloudletList the new cloudlet list
 	 */
-	//protected <T extends VTasks> void setVTaskList(List<T> vtaskList) {
-	//	this.vtaskList = vtaskList;
-	//}
+	protected <T extends VTasks> void setVTaskList(List<T> vtaskList) {
+		this.vtaskList = vtaskList;
+	}
 	
-	
-	
-	
-	
+
 	/**
 	 * Gets the cloudlet submitted list.
 	 * 
@@ -827,13 +745,10 @@ public class DatacenterBroker extends SimEntity {
 	 * @param <T> the generic type
 	 * @return the cloudlet submitted list
 	 */
-	//@SuppressWarnings("unchecked")
-	//public <T extends VTasks> List<T> getVTasksSubmittedList() {
-	//	return (List<T>) vtaskSubmittedList;
-	//}
-	
-	
-	
+	@SuppressWarnings("unchecked")
+	public <T extends VTasks> List<T> getVTasksSubmittedList() {
+		return (List<T>) vtaskSubmittedList;
+	}
 	
 	
 	/**
@@ -847,20 +762,15 @@ public class DatacenterBroker extends SimEntity {
 	}
 
 	
-	
-
 	/**
 	 * Sets the vtasks submitted list.
 	 * 
 	 * @param <T> the generic type
 	 * @param cloudletSubmittedList the new cloudlet submitted list
 	 */
-	//protected <T extends VTasks> void setVTasksSubmittedList(List<T> vtaskSubmittedList) {
-	//	this.vtaskSubmittedList = vtaskSubmittedList;
-	//}
-	
-	
-	
+	protected <T extends VTasks> void setVTasksSubmittedList(List<T> vtaskSubmittedList) {
+		this.vtaskSubmittedList = vtaskSubmittedList;
+	}
 	
 	
 	/**
@@ -880,13 +790,10 @@ public class DatacenterBroker extends SimEntity {
 	 * @param <T> the generic type
 	 * @return the cloudlet received list
 	 */
-	//@SuppressWarnings("unchecked")
-	///public <T extends VTasks> List<T> getVTasksReceivedList() {
-	//	return (List<T>) vtaskReceivedList;
-	//}
-	
-	
-	
+	@SuppressWarnings("unchecked")
+	public <T extends VTasks> List<T> getVTasksReceivedList() {
+		return (List<T>) vtaskReceivedList;
+	}
 	
 	
 	/**
@@ -906,11 +813,9 @@ public class DatacenterBroker extends SimEntity {
 	 * @param <T> the generic type
 	 * @param cloudletReceivedList the new cloudlet received list
 	 */
-	//protected <T extends VTasks> void setVTasksReceivedList(List<T> vtaskReceivedList) {
-	//	this.vtaskReceivedList = vtaskReceivedList;
-	//}
-	
-	
+	protected <T extends VTasks> void setVTasksReceivedList(List<T> vtaskReceivedList) {
+		this.vtaskReceivedList = vtaskReceivedList;
+	}
 	
 	
 	/**
