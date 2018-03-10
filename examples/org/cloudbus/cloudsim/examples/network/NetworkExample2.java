@@ -112,7 +112,9 @@ public class NetworkExample2 {
 			for(int i=0;i<cloudlets;i++){
 				Random rObj = new Random();
 				
-				cloudlet[i] = new Cloudlet(idShift+i,(length+showRandomInteger(START, END,rObj)), pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+				cloudlet[i] = new Cloudlet(1,idShift+i,length,0,0,0,showRandomInteger(0,1,rObj),
+						showRandomInteger(120,120,rObj),pesNumber, fileSize, outputSize, utilizationModel, 
+						utilizationModel, utilizationModel,0);
 				// setting the owner of these Cloudlets
 				cloudlet[i].setUserId(userId);
 				list.add(cloudlet[i]);
@@ -338,7 +340,7 @@ public class NetworkExample2 {
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		try {
-			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+			datacenter = new Datacenter(name,0,0,0, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

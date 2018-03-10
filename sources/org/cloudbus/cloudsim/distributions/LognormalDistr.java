@@ -59,6 +59,16 @@ public class LognormalDistr implements ContinuousDistribution {
 		this.mean = mean;
 		this.dev = dev;
 	}
+	
+	public double getMu() {
+		
+		return mean;
+	}
+	
+	public double getSigma() {
+		
+		return dev;
+	}
 
 	/*
 	 * (non-Javadoc)

@@ -46,6 +46,16 @@ public class Datacenter extends SimEntity {
 	private double x;
 	
 	private double range;
+	
+	private long bandWidth;
+
+	public long getBandWidth() {
+		return bandWidth;
+	}
+
+	public void setBandWidth(int bandWidth) {
+		this.bandWidth = bandWidth;
+	}
 
 	public double getRange() {
 		return range;
@@ -95,6 +105,7 @@ public class Datacenter extends SimEntity {
 	public Datacenter(
 			String name,
 			double x,
+			long bandWidth,
 			double range,
 			DatacenterCharacteristics characteristics,
 			VmAllocationPolicy vmAllocationPolicy,
@@ -103,6 +114,7 @@ public class Datacenter extends SimEntity {
 		super(name);
 
 		this.x=x;
+		this.bandWidth = bandWidth;
 		this.range = range;
 		setCharacteristics(characteristics);
 		setVmAllocationPolicy(vmAllocationPolicy);

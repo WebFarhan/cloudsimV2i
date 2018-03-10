@@ -10,6 +10,11 @@
 
 package org.cloudbus.cloudsim.examples;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -73,30 +78,81 @@ public class CloudSimExample7 {
 	}
 
 
-	private static List<Cloudlet> createCloudlet(int userId, int cloudlets, int idShift){
-		// Creates a container to store Cloudlets
-		LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();
+	private static List<Cloudlet> createCloudlet(int userId, int cloudlets, int START, int END, int idShift, long seed) throws NumberFormatException, IOException{
 		
+		   LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();		/* Creates a container to store Cloudlets*/
+		   double[] arrList = new double[5826];
+			
+	       File file = new File("/home/c00303945/Downloads/cloudsim-3.0.3/arrival1.dat");
+	        
+	        BufferedReader br = new BufferedReader(new FileReader(file));
+	        //Scanner scan = null;
 
-		//cloudlet parameters
-		long length = 40000;
-		long fileSize = 300;
-		long outputSize = 300;
-		int pesNumber = 1;
-		UtilizationModel utilizationModel = new UtilizationModelFull();
+	        try {
+	            //scan = new Scanner(file);
+	            int index = 0;
+	            String line = null;
+	            while ((line=br.readLine())!=null) {
+	               
+	                String[] lineArray = line.split(",");
+	                // do something with lineArray, such as instantiate an object
+	                
+	                arrList[index]= Double.parseDouble(lineArray[2]);
+	                //System.out.println(arrList[index]);
+	                index++;
+	            							} 
+	        }catch (FileNotFoundException e) {
+	            e.printStackTrace();
+	        } 
+			
+			/*Task (Cloudlets) parameters*/
+			
+			long length; 												/* MI of the Cloudlet */
+			long fileSize = 540000;
+			long outputSize = 300;
+			int pesNumber = 1;
+			double deadline = 0.0;
+			double priority = 0.0;
+			double xVal=0.0;
+			int taskType = 0;
+			//long seed1 = 500;
 
-		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
+			//long timeMillis = System.currentTimeMillis();
+	        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
+			
+			UtilizationModel utilizationModel = new UtilizationModelFull();
 
-		for(int i=0;i<cloudlets;i++){
-			Random rObj = new Random();
-			cloudlet[i] = new Cloudlet(idShift + i, (length + rObj.nextInt(2000)), pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-			// setting the owner of these Cloudlets
-			cloudlet[i].setUserId(userId);
-			list.add(cloudlet[i]);
+			Cloudlet[] cloudlet = new Cloudlet[cloudlets];
+
+			for(int i=0;i<cloudlets;i++){
+				//long timeMillis = System.currentTimeMillis(); //replace with relative time to simulator
+		        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
+				Random rObj = new Random();
+				rObj.setSeed(seed);
+				deadline = showRandomDouble(0.4, 1.5);
+				priority = Math.pow((1/Math.E),deadline);
+				length = 1000+showRandomInteger(START, END,rObj);
+				
+				if(length <= 1500)
+				{
+					taskType = 1;
+				}
+				else if(length > 1500)
+				{
+					taskType = 2;
+				}
+				
+				xVal = showRandomInteger(1,4,rObj);
+				cloudlet[i] = new Cloudlet(taskType,idShift+i,length,deadline,priority,xVal,showRandomInteger(0,1,rObj),
+						showRandomInteger(120,120,rObj),pesNumber, fileSize +showRandomInteger(15000, 25000,rObj), outputSize, utilizationModel, 
+						utilizationModel, utilizationModel,arrList[i]);
+				cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
+				list.add(cloudlet[i]);
+				seed--;
+			}
+
+			return list;
 		}
-
-		return list;
-	}
 
 
 	////////////////////////// STATIC METHODS ///////////////////////
@@ -273,7 +329,7 @@ public class CloudSimExample7 {
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		try {
-			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+			datacenter = new Datacenter(name, 0 , 0, 0,characteristics, new VmAllocationPolicySimple(hostList), storageList, 100);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

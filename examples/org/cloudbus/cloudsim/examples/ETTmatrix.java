@@ -2,18 +2,12 @@ package org.cloudbus.cloudsim.examples;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import org.cloudbus.cloudsim.distributions.normalDistr;
+
 import org.apache.commons.math3.distribution.NormalDistribution;
 
+public class ETTmatrix {
 
-/**
- * This class represents an Estimated Completion Time matrix 
- * 
- * @author Anna Kovalenko
- */
 
-public class ETCmatrix {
-	
 	/**
 	 *  The matrix is holding a mean and a standard deviation 
 	 *  for each type of task on every base station
@@ -37,7 +31,7 @@ public class ETCmatrix {
 	 */
 	
 	@SuppressWarnings("unused")
-	private ETCmatrix() {
+	private ETTmatrix() {
 		
 	};
 	
@@ -47,7 +41,7 @@ public class ETCmatrix {
 	 * @param cloudletTotalnum takes the total number of Cloudlet Types in the simulation
 	 */
 	
-	public ETCmatrix(int taskTypeTotal, int dataCnum,  HashMap<String, NormalDistribution> _distributions) {
+	public ETTmatrix(int taskTypeTotal, int dataCnum, HashMap<String, NormalDistribution> _distributions) {
 		
 		this.totalDataC = dataCnum;
 		this.totalCloudlet = taskTypeTotal;
@@ -123,7 +117,6 @@ public class ETCmatrix {
 		
 		NormalDistribution distr = etcMatrix[taskType][DataCenter];
 		
-		
 		return distr.getStandardDeviation();
 	}
 	
@@ -148,11 +141,10 @@ public class ETCmatrix {
 		NormalDistribution distr = etcMatrix[taskType][dataCenter];
 		//double worstTime = distr.getMean() + distr.getStandardDeviation();
 		
-		
 		return distr.cumulativeProbability(deadLine);
 		
-		
 	}
+	
 	
 	
 	public void printMatrix() {
@@ -160,6 +152,6 @@ public class ETCmatrix {
 		System.out.println(Arrays.deepToString(etcMatrix));
 		
 	}
-
-
+	
+	
 }

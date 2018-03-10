@@ -62,9 +62,6 @@ public class DatacenterBroker extends SimEntity {
 	/** The cloudlet received list. */
 	protected List<? extends Cloudlet> cloudletReceivedList;
 	
-	
-	
-	
 	/** The vtasks received list. */
 	protected List<? extends VTasks> vtaskReceivedList;
 	
@@ -419,8 +416,9 @@ public class DatacenterBroker extends SimEntity {
 		Random randomDelay = new Random();// random delay generator object
 		
 	    List<Cloudlet> sortList = new ArrayList<Cloudlet>();
-		
-		//List<VTasks> sortList = new ArrayList<VTasks>();
+	    
+	    
+	    //List<VTasks> sortList = new ArrayList<VTasks>();
 		ArrayList<Cloudlet> tempList = new ArrayList<Cloudlet>();
 		
 		//adding cloudlets to templist for sorting
@@ -444,49 +442,33 @@ public class DatacenterBroker extends SimEntity {
 			tempList.remove(smallestCloudlet);
 		}
 		
-		
-		// for debugging purpose
-		int count = 1;
-		for(Cloudlet printCloudlet: sortList) {
-			Log.printLine(count+" Cloudlet ID: "+printCloudlet.getCloudletId()+", Cloudlet Length: "+printCloudlet.getCloudletLength());
-			count++;
-		}
-		
-		
-		//for (Cloudlet cloudlet : getCloudletList())
-		//for debugging purpose
 		for(Vm virm: getVmsCreatedList()) {
-			//if(virm.getMips()>cloudlet.getCloudletLength()) {// this condition decides vms capacity for assiging task to vm
-				//cloudlet.setVmId(virm.getId()); // May be this is the point where task assignment need to be done
-				
-				Log.printLine("Vm ID : " +virm.getId()+" Mips of Vm : "+virm.getMips());
-			//}
-	
+			
+			Log.printLine("Vm ID : " +virm.getId()+" Mips of Vm : "+virm.getMips());
+
 		}
-		
 		
 		List<Cloudlet> SC_policy_Que = new ArrayList<Cloudlet>();
 		
 		if(schedulerPolicy =="SJF") {
 			
-			SC_policy_Que = SortedbySJF();
+			SC_policy_Que = sortList;
 		}
 		else if(schedulerPolicy=="Priority")
 		{
 			SC_policy_Que = PrioritySchedule();
 			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!Priortity scheduling!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		}
-		else {
+		else if(schedulerPolicy=="SLF") {
 			SC_policy_Que = sortList;
+		}			
+		else {
+			SC_policy_Que = getCloudletList();
+			System.out.println("!!!!!!!!!!!!!!!!!!FCFS Scheduling!!!!!!!!!!!!!!!!!");
 		}
 		
-		//List<Cloudlet> sjfList =  SortedbySJF();
 		
-		//sortList sorted by cloudlets size
-		
-		//sorted by cloudlets shortest execution time
-		
-		for (Cloudlet cloudlet : SC_policy_Que) {// using the sorted array ... edited by razin
+		for (Cloudlet cloudlet : sortList) {// using the sorted array ... edited by razin
 			Vm vm;
 			
 			// if user didn't bind this cloudlet and it has not been executed yet
@@ -508,25 +490,35 @@ public class DatacenterBroker extends SimEntity {
 			
 
 			
-			Log.printLine("******************* Vm ID : " +vm.getId()+" Mips of Vm : "+vm.getMips()+" Cloudlet ID "+ cloudlet.getCloudletId()+" cloudlet size : "+cloudlet.getCloudletLength());
+			//Log.printLine("******************* Vm ID : " +vm.getId()+" Mips of Vm : "+vm.getMips()+" Cloudlet ID "+ cloudlet.getCloudletId()+" cloudlet size : "+cloudlet.getCloudletLength());
 	
-			cloudlet.setVmId(vm.getId()); 	
-			schedule(getVmsToDatacentersMap().get(vm.getId()),delay ,CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
+			
+			cloudlet.setVmId(vm.getId()); 
+			
+			
+			
+			
+			schedule(getVmsToDatacentersMap().get(vm.getId()),0,CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
+			
+			//System.out.println("@@@@@@@ VMs to Datacenters Map @@@@@@@    " + getVmsToDatacentersMap().get(vm.getId()));
+						
 			Log.printLine("**** Cloudlet ID : "+cloudlet.getCloudletId()+" Cloudlet status ====  "+cloudlet.getCloudletFinishedSoFar());
 			cloudletsSubmitted++;
+			
 			vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
 			
+			//CloudSim.pauseSimulation();
 			//getVTasksSubmittedList().add(vtask);
 			
 			getCloudletSubmittedList().add(cloudlet);
 			
+			
 			//System.out.println("Poisson number : "+getPoisson(showDelayRandomInteger(1,10,randomDelay)));
-			delay=delay+showDelayRandomInteger(1,10,randomDelay); // adding delay randomly between 1 to 10 seconds 
-		
-			}
+			delay=delay+showDelayRandomInteger(1,5,randomDelay); // adding delay randomly between 1 to 10 seconds 
+
+		  }
 			
-			
-		//}
+	    //}
 
 		// remove submitted cloudlets from waiting list
 		for (Cloudlet cloudlet : getCloudletSubmittedList()) {

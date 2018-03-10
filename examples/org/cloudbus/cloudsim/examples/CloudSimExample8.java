@@ -10,11 +10,14 @@
 
 package org.cloudbus.cloudsim.examples;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
@@ -60,7 +63,7 @@ public class CloudSimExample8 {
 
 		//VM Parameters
 		long size = 10000; //image size (MB)
-		int ram = 512; //vm memory (MB)
+		int ram = 5000; //vm memory (MB)
 		int mips = 250;
 		long bw = 1000;
 		int pesNumber = 1; //number of cpus
@@ -77,28 +80,92 @@ public class CloudSimExample8 {
 		return list;
 	}
 
+	private static int showRandomInteger(int aStart, int aEnd, Random aRandom){
+	    if (aStart > aEnd) {
+	      throw new IllegalArgumentException("Start cannot exceed End.");
+	    }
+	    //get the range, casting to long to avoid overflow problems
+	    long range = (long)aEnd - (long)aStart + 1;
+	    // compute a fraction of the range, 0 <= frac < range
+	    long fraction = (long)(range * aRandom.nextDouble());
+	    int randomNumber =  (int)(fraction + aStart);    
+	    
+	    return randomNumber;
+	  }
 
-	private static List<Cloudlet> createCloudlet(int userId, int cloudlets, int idShift){
+	public static double round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+
+	    BigDecimal bd = new BigDecimal(value);
+	    bd = bd.setScale(places, RoundingMode.HALF_UP);
+	    return bd.doubleValue();
+	}
+
+	private static double showRandomDouble(double aStart, double aEnd){
+	    if (aStart > aEnd) {
+	      throw new IllegalArgumentException("Start cannot exceed End.");
+	    }
+
+	    Random r = new Random();
+	    double randomValue = aStart + (aEnd - aStart) * r.nextDouble();
+	    
+	    
+	    return round(randomValue, 2);//randomValue;
+	  }
+	
+	
+	private static List<Cloudlet> createCloudlet(int userId, int cloudlets, int START, int END, int idShift, long seed){
 		// Creates a container to store Cloudlets
-		LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();
+				LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();
 
-		//cloudlet parameters
-		long length = 40000;
-		long fileSize = 300;
-		long outputSize = 300;
-		int pesNumber = 1;
-		UtilizationModel utilizationModel = new UtilizationModelFull();
+				//tasks(Cloudlets) parameters
+				/*Task (Cloudlets) parameters*/
+				
+				long length; 												/* MI of the Cloudlet */
+				long fileSize = 540000;
+				long outputSize = 300;
+				int pesNumber = 1;
+				double deadline = 0.0;
+				double priority = 0.0;
+				double xVal=0.0;
+				int taskType = 0;
+				//long seed1 = 500;
 
-		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
+				//long timeMillis = System.currentTimeMillis();
+		        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
+				
+				UtilizationModel utilizationModel = new UtilizationModelFull();
 
-		for(int i=0;i<cloudlets;i++){
-			cloudlet[i] = new Cloudlet(idShift + i, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-			// setting the owner of these Cloudlets
-			cloudlet[i].setUserId(userId);
-			list.add(cloudlet[i]);
-		}
+				Cloudlet[] cloudlet = new Cloudlet[cloudlets];
 
-		return list;
+				for(int i=0;i<cloudlets;i++){
+					//long timeMillis = System.currentTimeMillis(); //replace with relative time to simulator
+			        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
+					Random rObj = new Random();
+					rObj.setSeed(seed);
+					deadline = showRandomDouble(0.4, 1.5);
+					priority = Math.pow((1/Math.E),deadline);
+					length = 1000+showRandomInteger(START, END,rObj);
+					
+					if(length <= 1500)
+					{
+						taskType = 1;
+					}
+					else if(length > 1500)
+					{
+						taskType = 2;
+					}
+					
+					xVal = showRandomInteger(1,4,rObj);
+					cloudlet[i] = new Cloudlet(taskType,idShift+i,length,deadline,priority,xVal,showRandomInteger(0,1,rObj),
+							showRandomInteger(120,120,rObj),pesNumber, fileSize +showRandomInteger(15000, 25000,rObj), outputSize, utilizationModel, 
+							utilizationModel, utilizationModel,0);
+					cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
+					list.add(cloudlet[i]);
+					seed--;
+				}
+
+				return list;
 	}
 
 
@@ -135,7 +202,7 @@ public class CloudSimExample8 {
 
 			//Fourth step: Create VMs and Cloudlets and send them to broker
 			vmList = createVM(brokerId, 5, 0); //creating 5 vms
-			cloudletList = createCloudlet(brokerId, 10, 0); // creating 10 cloudlets
+			cloudletList = createCloudlet(brokerId, 5,100,1000,1,400); // creating 10 cloudlets
 			
 	
 			broker.submitVmList(vmList);
@@ -241,7 +308,7 @@ public class CloudSimExample8 {
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		try {
-			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+			datacenter = new Datacenter(name, 0 , 0, 0,characteristics, new VmAllocationPolicySimple(hostList), storageList, 100);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -275,7 +342,7 @@ public class CloudSimExample8 {
 		Log.printLine();
 		Log.printLine("========== OUTPUT ==========");
 		Log.printLine("Cloudlet ID" + indent + "STATUS" + indent +
-				"Data center ID" + indent + "VM ID" + indent + indent + "Time" + indent + "Start Time" + indent + "Finish Time");
+				"Data center ID" + indent + "VM ID" + indent + indent +"length"+ indent + indent +"Time" + indent + "Start Time" + indent + "Finish Time");
 
 		DecimalFormat dft = new DecimalFormat("###.##");
 		for (int i = 0; i < size; i++) {
@@ -286,7 +353,7 @@ public class CloudSimExample8 {
 				Log.print("SUCCESS");
 
 				Log.printLine( indent + indent + cloudlet.getResourceId() + indent + indent + indent + cloudlet.getVmId() +
-						indent + indent + indent + dft.format(cloudlet.getActualCPUTime()) +
+						indent + indent + indent +cloudlet.getCloudletLength()+indent + indent + indent+dft.format(cloudlet.getActualCPUTime()) +
 						indent + indent + dft.format(cloudlet.getExecStartTime())+ indent + indent + indent + dft.format(cloudlet.getFinishTime()));
 			}
 		}
@@ -312,7 +379,7 @@ public class CloudSimExample8 {
 
 				//Create VMs and Cloudlets and send them to broker
 				setVmList(createVM(getBroker().getId(), 5, 100)); //creating 5 vms
-				setCloudletList(createCloudlet(getBroker().getId(), 10, 100)); // creating 10 cloudlets
+				setCloudletList(createCloudlet(getBroker().getId(), 5,100,1000,1,400)); // creating 5 cloudlets
 
 				broker.submitVmList(getVmList());
 				broker.submitCloudletList(getCloudletList());

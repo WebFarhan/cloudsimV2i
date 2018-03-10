@@ -44,13 +44,25 @@ public class Cloudlet {
 	
 	private double vSpeed;
 	
-	private String taskType;
+	private int taskType;
 	
-	public String getTaskType() {
+	private double arrivalTime;
+	
+	
+	
+	public double getArrivalTime() {
+		return arrivalTime;
+	}
+
+	public void setArrivalTime(double arrivalTime) {
+		this.arrivalTime = arrivalTime;
+	}
+
+	public int getTaskType() {
 		return taskType;
 	}
 
-	public void setTaskType(String taskType) {
+	public void setTaskType(int taskType) {
 		this.taskType = taskType;
 	}
 
@@ -231,7 +243,7 @@ public class Cloudlet {
 	 * @post $none
 	 */
 	public Cloudlet(
-			final String taskType,
+			final int taskType,
 			final int cloudletId,
 			final long cloudletLength,
 			final double deadline,
@@ -244,7 +256,8 @@ public class Cloudlet {
 			final long cloudletOutputSize,
 			final UtilizationModel utilizationModelCpu,
 			final UtilizationModel utilizationModelRam,
-			final UtilizationModel utilizationModelBw) {
+			final UtilizationModel utilizationModelBw,
+			final double arrivalTime) {
 		this(
 				cloudletId,
 				cloudletLength,
@@ -266,6 +279,7 @@ public class Cloudlet {
 		this.vSpeed = vSpeed;
 		this.vHD = vHD;
 		this.taskType = taskType;
+		this.arrivalTime = arrivalTime;
 	}
 
 	/**
