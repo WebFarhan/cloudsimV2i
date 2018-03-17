@@ -380,7 +380,7 @@ public class testExecutionTime {
 		
 		cloudletList1 = createCloudlet(broker1.getId(),10,100,2000,1,400);// this is the arrival buffer
 		
-		cloudletList2 = createCloudlet(broker1.getId(),10,100,2000,100,400);// this is the arrival buffer
+		cloudletList2 = createCloudlet(broker2.getId(),10,100,2000,100,400);// this is the arrival buffer
 		
 		
 		
@@ -395,13 +395,22 @@ public class testExecutionTime {
 		
 		//System.out.println(" Result      +++++++ " + result);
 		
+		long startTime = System.currentTimeMillis();
+		
 		broker1.submitCloudletList(cloudletList1);
 		
 		//broker1.submitVmList(vmlist1);
-		broker1.submitCloudletList(cloudletList2);
+		broker2.submitCloudletList(cloudletList2);
+		
+//        long stopTime = System.currentTimeMillis();
+//		
+//		while((stopTime - startTime) < 5000) {
+//			
+//			stopTime = System.currentTimeMillis();
+//		}
 		
 		CloudSim.startSimulation();
-		
+		//long startTime = System.currentTimeMillis();
 		
 		
 		
@@ -419,10 +428,23 @@ public class testExecutionTime {
 					
 		//newList.addAll(broker2.getCloudletReceivedList());
 		//newList.addAll(broker3.getCloudletReceivedList());
-
+		//double stopTime = CloudSim.clock();
+//		long laststopTime = System.currentTimeMillis();
+//		
+//		while((laststopTime - startTime) < 20000) {
+//			
+//			laststopTime = System.currentTimeMillis();
+//		}
+		
 		CloudSim.stopSimulation();
+		//long stopTime = System.currentTimeMillis();
+		
+		
+		//System.out.println("Elapsed Time : #$#$#$" + (laststopTime - startTime));
+		
 		
 		List<Cloudlet> newList = broker1.getCloudletReceivedList();
+		newList.addAll(broker2.getCloudletReceivedList());
 		
        for(Cloudlet cloudlet:newList) {
 			

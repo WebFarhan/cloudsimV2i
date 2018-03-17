@@ -80,8 +80,10 @@ import com.sun.java_cup.internal.runtime.Symbol;
 public class twoDataCenter {
 
 	
-	private static List<Cloudlet> cloudletList1,cloudletList2,cloudletList3,cloudletList4,taskDstrList;
+	private static List<Cloudlet> cloudletList1,cloudletList2,cloudletList3,cloudletList4,cloudletList5,cloudletList6,taskDstrList,workloadBS0,workloadBS1,workloadBS2;
 	private static int SEED = 120;
+	
+	private static List<List<Cloudlet>> workloadList;
 	//private static List<VTasks> taskList;
 	private static ArrayList<Integer> allCounters = new ArrayList<>();
 	private static ArrayList<Integer> allTaskNotAllocated = new ArrayList<>();
@@ -99,7 +101,6 @@ public class twoDataCenter {
 	public static Properties prop = new Properties();
 	private static int numTaskAllocatedBS1, numTaskAllocatedBS2, numTaskAllocatedBS3;
 
-	
 	
 	/**Creates a container to store VMs. 
 	 * This list is passed to the broker later
@@ -201,8 +202,8 @@ public class twoDataCenter {
 			//long timeMillis = System.currentTimeMillis(); //replace with relative time to simulator
 	        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
 			Random rObj = new Random();
-			//rObj.setSeed(seed);
-			deadline = showRandomDouble(0.4, 1.5);
+			rObj.setSeed(seed);
+			//deadline = showRandomDouble(0.4, 1.5);
 			priority = Math.pow((1/Math.E),deadline);
 			length = randomMIGenerator(START, END,rObj);
 			
@@ -221,7 +222,7 @@ public class twoDataCenter {
 					utilizationModel, utilizationModel,arrList[i]);
 			cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
 			list.add(cloudlet[i]);
-			seed--;
+			seed++;
 		}
 
 		return list;
@@ -378,7 +379,7 @@ public class twoDataCenter {
 	 * @param trial
 	 * @throws Exception 
 	 */
-	private static void loadBalancer(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3, DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3, ETCmatrix matrix,ETTmatrix ettmatrix, int trial  ) throws Exception {
+	private static void loadBalancer(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3, DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3, ETCmatrix matrix,ETTmatrix ettmatrix, int trial  , long clockStartTime) throws Exception {
 		
 		/* Create three batch queues for respective Base Stations. */
 		
@@ -404,22 +405,21 @@ public class twoDataCenter {
 		if(trial == 0)
 		{		
 			for(Cloudlet cloudlet:arrivingCloudlets) {
-				cloudlet.setUserId(broker2.getId());
-				batchQueBS2.add(cloudlet);
-				deadLineFirst(cloudlet, slacktime2,vmMips2);
-			}
-			
-			broker2.submitCloudletList(batchQueBS2); 
-						
-	
-		}
-		else if(trial == 1) {
-			for(Cloudlet cloudlet:arrivingCloudlets) {
 				cloudlet.setUserId(broker1.getId());
 				batchQueBS1.add(cloudlet);
 				deadLineFirst(cloudlet, slacktime1,vmMips1);
 			}
-			broker1.submitCloudletList(batchQueBS1);
+			
+			broker1.submitCloudletList(batchQueBS1); 
+	
+		}
+		else if(trial == 1) {
+			for(Cloudlet cloudlet:arrivingCloudlets) {
+				cloudlet.setUserId(broker2.getId());
+				batchQueBS2.add(cloudlet);
+				deadLineFirst(cloudlet, slacktime2,vmMips2);
+			}
+			broker2.submitCloudletList(batchQueBS2);
 		}
 		else if(trial == 2) {
 			for(Cloudlet cloudlet:arrivingCloudlets) {
@@ -430,8 +430,6 @@ public class twoDataCenter {
 			broker3.submitCloudletList(batchQueBS3);
 		}
 		else {
-			
-			//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ In ETC matrix !!! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 			
 			for(Cloudlet cloudlet: arrivingCloudlets)
 			{
@@ -842,9 +840,12 @@ public class twoDataCenter {
 	
 	public static void main(String[] args) throws IOException {
 		Log.printLine("Starting Simulation for V2I task processing...");
+		int numTasksAdmitted=0;
 		int number = 0;
 		int arrivingTasks = 0;
 		int lbOption = -1;
+		long userSeed=0;
+		
 		//boolean lbOnOff = false;
 		String SchPolicy=null;
 		taskDstrList = new ArrayList<Cloudlet>();
@@ -871,7 +872,8 @@ public class twoDataCenter {
 				//lbOnOff = Boolean.parseBoolean(LB);								/* Load balancer on/off option. */
 				lbOption = Integer.parseInt(LB);
 				SchPolicy = br.readLine();										/* Scheduler policy. */
-				
+				String seed = br.readLine();
+				userSeed = Long.parseLong(seed);
 				
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -887,6 +889,7 @@ public class twoDataCenter {
 		printWriter.println("Number of Total trial : " + number);
 		printWriter.println("Load Balancer Status :"+lbOption);
 		printWriter.println("Scheduler Policy :"+SchPolicy);
+		printWriter.println("User Seed :"+userSeed);
 		printWriter.println();
 		
 		/* Trial loop */
@@ -894,6 +897,7 @@ public class twoDataCenter {
 		for(int i = 0;i <number;i++) {
 		try {
 			printWriter.println("Trial No : "+ i);
+			//allTaskNotAllocated = ;
 			
 			/* First step: initialize the CloudSim package. It should be called before creating any entities.*/
 			
@@ -908,14 +912,13 @@ public class twoDataCenter {
 			@SuppressWarnings("unused")
 			Datacenter datacenter0 = createDatacenter("BaseStation_0",1,0,60,54000000);	/* Base Station x with coordinates 0 and the range of 60 meters. */
 			@SuppressWarnings("unused")
-			Datacenter datacenter1 = createDatacenter("BaseStation_1",1,5,65,54000000);	/* Base Station x  with coordinates 5 and the range of 65 meters. */
+			Datacenter datacenter1 = createDatacenter("BaseStation_1",1,5,65,52000000);	/* Base Station x  with coordinates 5 and the range of 65 meters. */
 			@SuppressWarnings("unused")
-			Datacenter datacenter2 = createDatacenter("BaseStation_2",1,-2.5,50,54000000); /* Base Station x  with coordinates -2.5 and the range of 50 meters. */
+			Datacenter datacenter2 = createDatacenter("BaseStation_2",1,-2.5,50,53000000); /* Base Station x  with coordinates -2.5 and the range of 50 meters. */
 			//////End Of Base Station Creation//////
 			
 			
 			/* Third step: Create Brokers.*/
-			
 			DatacenterBroker broker1 = createBroker("broker1");
 			int vmMips1 = 1500;
 			vmlist1 = createVM_N(broker1.getId(), 5,vmMips1, 1);
@@ -936,23 +939,133 @@ public class twoDataCenter {
 			
 			/* End of broker creation - Razin.*/
 		
-			int numTasksAdmitted = arrivingTasks;					/* Set the number of tasks arriving to the Base Station. */
-			cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-90),100,2000,1,400);// tasks ranging 1100 to 1500 mi
-     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,400); // tasks ranging 1500 to 2000 mi
+//			if(i>=0 && i<3)
+//			{
+//				userSeed = userSeed + 1000;
+//			}
 			
-     				
+			//int numTasksAdmitted = arrivingTasks;
+			long startTime = System.currentTimeMillis();
+	
+			numTasksAdmitted = arrivingTasks;
+			
+			
+			//cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-20),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
+     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
+			
+     		//userSeed = userSeed + 1000;
+     		
+     		// Generating three workload for 3 Base Station 
+     		cloudletList4 = createCloudlet(broker1.getId(),10,100,2000,400,1850);
+     		cloudletList5 = createCloudlet(broker2.getId(),10,100,2000,600,15000);
+     		cloudletList6 = createCloudlet(broker3.getId(),10,100,2000,800,3986);
+     		//Workload END
+     		
+     		
+     		for(Cloudlet cloudlet:cloudletList4)
+     		{
+     			deadLineFirst(cloudlet, 0.25,vmMips1);
+     		
+     		}
+     		
+     		for(Cloudlet cloudlet:cloudletList5)
+     		{
+     			deadLineFirst(cloudlet, 0.12,vmMips2);
+     		
+     		}
+     		
+     		for(Cloudlet cloudlet:cloudletList6)
+     		{
+     			deadLineFirst(cloudlet, 0.19,vmMips3);
+     		
+     		}
+     		
+     		broker1.submitCloudletList(cloudletList4);
+     		broker2.submitCloudletList(cloudletList5);
+     		broker3.submitCloudletList(cloudletList6);
+     		
+     		//for(int b=0;b<dataCenterNum;b++)
+			//{
+			//	workloadList.add(createCloudlet(broker1.getId(),(numTasksAdmitted-20),100,2000,200+(b*100),userSeed));
+			//}
+     		
+     		
+     		
+     		/*
+			if(i==3) {
+				
+				numTasksAdmitted = 100;
+				
+				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-90),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
+	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
+				
+				
+			}
+			else if(i==4)
+			{
+				numTasksAdmitted = 200;
+				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-190),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
+	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
+				
+			}
+			else if(i==5)
+			{
+				numTasksAdmitted = 300;
+				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-290),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
+	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
+				
+			}
+			else if(i==6)
+			{
+				numTasksAdmitted = 400;
+				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-390),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
+	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
+				
+			}
+			else if(i==7)
+			{
+				numTasksAdmitted = 500;
+				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-490),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
+	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
+				
+			}
+			*/
+ 		
+     		
+						
+			/* Set the number of tasks arriving to the Base Station. */
+			//cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-40),100,2000,1,400);// tasks ranging 1100 to 1500 mi
+     		//cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,400); // tasks ranging 1500 to 2000 mi
+			
      		numTaskAllocatedBS1 = 0;
     		numTaskAllocatedBS2 = 0;
     		numTaskAllocatedBS3 = 0;
      		
      		if (lbOption == 1) { // load balancer on without task dropping
-				loadBalancer(cloudletList2, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
-				loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
-				
+     			if(i==0) {
+     				loadBalancer(cloudletList4, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==1) {
+     				loadBalancer(cloudletList5, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     				
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==2) {
+     				loadBalancer(cloudletList6, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else {
+     				loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			
 			}
-     		else if(lbOption==2) {
+     		else if(lbOption==2) { // load balancer with task dropping
+     			if(i==0) {
      			loadBalancerWithTaskDropping(cloudletList2, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,0.5);
      			loadBalancerWithTaskDropping(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,0.5);
+     			}
+     			
      			
      		}
 			else {
@@ -961,7 +1074,7 @@ public class twoDataCenter {
 			}
 			
 			
-     		System.out.println("############Clock time before start simulation ::::"+CloudSim.clock());
+     		//System.out.println("############Clock time before start simulation ::::"+CloudSim.clock());
      		
      		///CloudSim.clock();
      		
@@ -982,8 +1095,7 @@ public class twoDataCenter {
 			for(Cloudlet cloudlet:newList) {
 				
 				System.out.println(" CLouldet ::::: "+cloudlet.getCloudletId()+"  waiting time  " + cloudlet.getWaitingTime());
-				
-				
+	
 			}
 			
 			
@@ -993,18 +1105,32 @@ public class twoDataCenter {
 			
 			ettMatrix = new ETTmatrix(taskTypeNum, dataCenterNum, trTimes);
 			matrix = new ETCmatrix(taskTypeNum, dataCenterNum, distributions);
-
+			
+			
+			// pasuing the simulation for 1 seconds between each trial 
+//			long stopTime = System.currentTimeMillis();
+//			
+//			Random random = new Random();
+//			
+//			while((stopTime - startTime) < 1000) {
+//				
+//				stopTime = System.currentTimeMillis();
+//			}
+			//End of pausing
+			
+			
+			
 			CloudSim.stopSimulation();
 			
 			System.out.println("#############Clock time after stop simulation ::::"+CloudSim.clock());
 				
 
-     		for(Cloudlet cloudlet:cloudletList2) {
-     			
-     			System.out.println("Completion time ++++++++++++++++ "+(cloudlet.getFinishTime() - cloudlet.getSubmissionTime()));
-     			
-     		}
-     		
+//     		for(Cloudlet cloudlet:cloudletList2) {
+//     			
+//     			System.out.println("Completion time ++++++++++++++++ "+(cloudlet.getFinishTime() - cloudlet.getSubmissionTime()));
+//     			
+//     		}
+//     		
             for(Cloudlet cloudlet:cloudletList3) {
      			
      			System.out.println("Completion time ++++++++++++++++ "+(cloudlet.getFinishTime() - cloudlet.getSubmissionTime()));
@@ -1012,20 +1138,22 @@ public class twoDataCenter {
 			
 			
             
-            for(Cloudlet cloudlet:newList) {
-            	
-            }
-            
-            
-			//System.out.println("^^^^^^^^ list of cloudlets^^^^^^^^^^^ "+taskDstrList.size()); 
+            //System.out.println("^^^^^^^^ list of cloudlets^^^^^^^^^^^ "+taskDstrList.size()); 
 			 printCloudletList(newList,printWriter);
 		
 			
-			
+			allTaskNotAllocated.add(noTaskNotAllocated);
 			printWriter.println();
 			System.out.println(" All counter array ::"+ allCounters.toString());
 			printWriter.println(" All counter array ::"+ allCounters.toString());
 			printWriter.println();
+			
+			printWriter.println();
+			System.out.println(" Task not allocated Array ::"+ allTaskNotAllocated.toString());
+			printWriter.println(" Task not allocated Array ::"+ allTaskNotAllocated.toString());
+			printWriter.println();
+			
+			
 			//HashMap<String, NormalDistribution> newDistr = getDistribution(taskDstrList);
 			//matrix = new ETCmatrix(taskTypeNum, dataCenterNum, newDistr);
 			
@@ -1064,7 +1192,7 @@ public class twoDataCenter {
 			//System.out.println("No of task not allocated : "+ noTaskNotAllocated +" Allocation miss rate : "+ deadLineMissRate);
 			//printWriter.println("No of task not allocated : "+ noTaskNotAllocated +" Allocation miss rate : "+ deadLineMissRate);
 			
-			allCounters.add(noTaskNotAllocated);
+			
 			System.out.println(" No of task not allocated ::::@@@#########  "+noTaskNotAllocated);
 			System.out.println(" Task Allocated to BS0 :" + numTaskAllocatedBS1 + " Task Allocated to BS1 :" + numTaskAllocatedBS2 +" Task Allocated to BS2 :" +numTaskAllocatedBS3);
 			
@@ -1164,7 +1292,7 @@ public class twoDataCenter {
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		//double range = 5000;
-		long linkBandWidth = 54000000;
+		//long linkBandWidth = 54000000;
 		try {
 			datacenter = new Datacenter(name, x , linkBW, range,characteristics, new VmAllocationPolicySimple(hostList), storageList, 100);
 		} catch (Exception e) {
@@ -1377,6 +1505,7 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 		allCounters.add(counter);
 		Log.printLine("Number of task missed deadline  : "+counter);
 		pw.println("Number of task missed deadline  : "+counter);
+		
 		
 		
 		//printWriter.close();
