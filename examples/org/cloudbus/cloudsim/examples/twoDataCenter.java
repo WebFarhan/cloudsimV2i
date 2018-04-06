@@ -24,6 +24,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,7 +82,9 @@ public class twoDataCenter {
 
 	
 	private static List<Cloudlet> cloudletList1,cloudletList2,cloudletList3,cloudletList4,cloudletList5,cloudletList6,taskDstrList,workloadBS0,workloadBS1,workloadBS2;
-	private static int SEED = 120;
+	private static List<Cloudlet> overSubsList1,overSubsList2;
+	
+	private static int W1_SEED = 84500,W2_SEED = 95000,W3_SEED = 90950;
 	
 	private static List<List<Cloudlet>> workloadList;
 	//private static List<VTasks> taskList;
@@ -100,6 +103,9 @@ public class twoDataCenter {
 	public static int dataCenterNum = 3;										 /*the number of data centers*/
 	public static Properties prop = new Properties();
 	private static int numTaskAllocatedBS1, numTaskAllocatedBS2, numTaskAllocatedBS3;
+	private static int allocatedTaskBS1,allocatedTaskBS2,allocatedTaskBS3;
+	
+	private static double[] arrList1,arrList2;
 
 	
 	/**Creates a container to store VMs. 
@@ -124,8 +130,6 @@ public class twoDataCenter {
         int pesNumber = 1; 							/*Number of CPUs*/
         String vmm = "Xen"; 							/*VMM Name*/
         //int hmips = 100;
-        
-        
         /*Create Virtual Machines*/
         
         Vm[] vm = new Vm[vms];
@@ -139,6 +143,22 @@ public class twoDataCenter {
         return list;
     }
 	
+	private static int gaussianMiGenerator(double sd,double mean, Random r,double mincap,double maxcap) {
+		
+		//Random r = new Random(seed);
+	   //double sd=100,mean=2000;
+		double Result = mean+r.nextGaussian()*sd;
+		
+		if(Result < mincap) {
+			
+			Result = 2*mincap-Result;
+		}
+		else if(Result > maxcap) {
+		Result=Math.abs(2*maxcap- Result);
+			
+		}
+		return (int)Result;
+	}
 	
     /** Create tasks (Cloudlets) for the base stations
      * @param userId
@@ -182,30 +202,26 @@ public class twoDataCenter {
 		/*Task (Cloudlets) parameters*/
 		
 		long length; 												/* MI of the Cloudlet */
-		long fileSize = 540000;
+		long fileSize = 34000000;
 		long outputSize = 300;
 		int pesNumber = 1;
 		double deadline = 0.0;
 		double priority = 0.0;
 		double xVal=0.0;
 		int taskType = 0;
-		//long seed1 = 500;
-
-		//long timeMillis = System.currentTimeMillis();
-        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
 		
 		UtilizationModel utilizationModel = new UtilizationModelFull();
 
 		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
 
+		Random rObj = new Random();
+		rObj.setSeed(seed);
+		
 		for(int i=0;i<cloudlets;i++){
-			//long timeMillis = System.currentTimeMillis(); //replace with relative time to simulator
-	        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
-			Random rObj = new Random();
-			rObj.setSeed(seed);
+	
 			//deadline = showRandomDouble(0.4, 1.5);
 			priority = Math.pow((1/Math.E),deadline);
-			length = randomMIGenerator(START, END,rObj);
+			length = gaussianMiGenerator(400, 1500,rObj,START,END);
 			
 			if(length <= 1500)
 			{
@@ -222,13 +238,327 @@ public class twoDataCenter {
 					utilizationModel, utilizationModel,arrList[i]);
 			cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
 			list.add(cloudlet[i]);
-			seed++;
+			//seed++;
 		}
 
 		return list;
 	}
 	
+	/** Create tasks (Cloudlets) for the base stations
+     * @param userId
+     * @param cloudlets
+     * @param START
+     * @param END
+     * @param idShift
+     * @param seed
+     * @return
+     * @throws IOException 
+     * @throws NumberFormatException 
+     */
+	
+	private static List<Cloudlet> createInitialWorkLoad(int userId, int cloudlets, int START, int END, int idShift, long seed) throws NumberFormatException, IOException{
+		
+	   LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();		/* Creates a container to store Cloudlets*/
+	   		/*Task (Cloudlets) parameters*/
+		
+		long length; 												/* MI of the Cloudlet */
+		long fileSize = 64000000;
+		long outputSize = 300;
+		int pesNumber = 1;
+		double deadline = 0.0;
+		double priority = 0.0;
+		double xVal=0.0;
+		int taskType = 0;
+		
+		UtilizationModel utilizationModel = new UtilizationModelFull();
+
+		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
+
+		Random rObj = new Random();
+		rObj.setSeed(seed);
+		
+		for(int i=0;i<cloudlets;i++){
+	
+			//deadline = showRandomDouble(0.4, 1.5);
+			priority = Math.pow((1/Math.E),deadline);
+			length = gaussianMiGenerator(400, 1500,rObj,START,END);
+			
+			if(length <= 1500)
+			{
+				taskType = 1;
+			}
+			else if(length > 1500)
+			{
+				taskType = 2;
+			}
+			
+			xVal = showRandomInteger(1,4,rObj);
+			cloudlet[i] = new Cloudlet(taskType,idShift+i,length,deadline,priority,xVal,showRandomInteger(0,1,rObj),
+					showRandomInteger(120,120,rObj),pesNumber, fileSize +showRandomInteger(15000, 20000,rObj), outputSize, utilizationModel, 
+					utilizationModel, utilizationModel,0.0);
+			cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
+			
+			list.add(cloudlet[i]);
+			//seed++;
+		}
+
+		return list;
+	}
+	
+	
+	/** Create tasks (Cloudlets) for the base station 1
+     * @param userId
+     * @param cloudlets
+     * @param START
+     * @param END
+     * @param idShift
+     * @param seed
+     * @return
+     * @throws IOException 
+     * @throws NumberFormatException 
+     */
+	
+	private static List<Cloudlet> createCloudletForBS1(int userId, int cloudlets, int START, int END, int idShift, long seed) throws NumberFormatException, IOException{
+		
+	   LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();		/* Creates a container to store Cloudlets*/
+	   double[] arrList = new double[5700];
+		
+       File file = new File("/home/c00303945/Downloads/cloudsim-3.0.3/arrival2.dat");
+        
+       BufferedReader br = new BufferedReader(new FileReader(file));
+        //Scanner scan = null;
+
+       try {
+            //scan = new Scanner(file);
+            int index = 0;
+            String line = null;
+            while ((line=br.readLine())!=null) {
+               
+                String[] lineArray = line.split(",");
+                // do something with lineArray, such as instantiate an object
+                
+                arrList[index]= Double.parseDouble(lineArray[2]);
+                //System.out.println(arrList[index]);
+                index++;
+            							} 
+        }catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } 
+		
+		/*Task (Cloudlets) parameters*/
+		
+		long length; 												/* MI of the Cloudlet */
+		long fileSize = 100;
+		long outputSize = 300;
+		int pesNumber = 1;
+		double deadline = 0.0;
+		double priority = 0.0;
+		double xVal=0.0;
+		int taskType = 0;
+		
+		UtilizationModel utilizationModel = new UtilizationModelFull();
+
+		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
+
+		Random rObj = new Random();
+		rObj.setSeed(seed);
+		
+		for(int i=0;i<cloudlets;i++){
+	
+			//deadline = showRandomDouble(0.4, 1.5);
+			priority = Math.pow((1/Math.E),deadline);
+			length = gaussianMiGenerator(400, 1500,rObj,START,END);
+			
+			if(length <= 1500)
+			{
+				taskType = 1;
+			}
+			else if(length > 1500)
+			{
+				taskType = 2;
+			}
+			
+			xVal = showRandomInteger(1,4,rObj);
+			cloudlet[i] = new Cloudlet(taskType,idShift+i,length,deadline,priority,xVal,showRandomInteger(0,1,rObj),
+					showRandomInteger(120,120,rObj),pesNumber, fileSize +showRandomInteger(15000, 20000,rObj), outputSize, utilizationModel, 
+					utilizationModel, utilizationModel,0.0);// for base station 1 creating over subscription
+			cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
+			list.add(cloudlet[i]);
+			//seed++;
+		}
+
+		return list;
+	}
 	 
+	/** Create tasks (Cloudlets) for the base station 2
+     * @param userId
+     * @param cloudlets
+     * @param START
+     * @param END
+     * @param idShift
+     * @param seed
+     * @return
+     * @throws IOException 
+     * @throws NumberFormatException 
+     */
+	
+	private static List<Cloudlet> createCloudletForBS2(int userId, int cloudlets, int START, int END, int idShift, long seed) throws NumberFormatException, IOException{
+		
+	   LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();		/* Creates a container to store Cloudlets*/
+	   double[] arrList = new double[5990];
+		
+       File file = new File("/home/c00303945/Downloads/cloudsim-3.0.3/arrival3.dat");
+        
+       BufferedReader br = new BufferedReader(new FileReader(file));
+        //Scanner scan = null;
+
+       try {
+            //scan = new Scanner(file);
+            int index = 0;
+            String line = null;
+            while ((line=br.readLine())!=null) {
+               
+                String[] lineArray = line.split(",");
+                // do something with lineArray, such as instantiate an object
+                
+                arrList[index]= Double.parseDouble(lineArray[2]);
+                //System.out.println(arrList[index]);
+                index++;
+            							} 
+        }catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } 
+		
+		/*Task (Cloudlets) parameters*/
+		
+		long length; 												/* MI of the Cloudlet */
+		long fileSize = 100;
+		long outputSize = 300;
+		int pesNumber = 1;
+		double deadline = 0.0;
+		double priority = 0.0;
+		double xVal=0.0;
+		int taskType = 0;
+		
+		UtilizationModel utilizationModel = new UtilizationModelFull();
+
+		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
+
+		Random rObj = new Random();
+		rObj.setSeed(seed);
+		
+		for(int i=0;i<cloudlets;i++){
+	
+			//deadline = showRandomDouble(0.4, 1.5);
+			priority = Math.pow((1/Math.E),deadline);
+			length = gaussianMiGenerator(400, 1500,rObj,START,END);
+			
+			if(length <= 1500)
+			{
+				taskType = 1;
+			}
+			else if(length > 1500)
+			{
+				taskType = 2;
+			}
+			
+			xVal = showRandomInteger(1,4,rObj);
+			cloudlet[i] = new Cloudlet(taskType,idShift+i,length,deadline,priority,xVal,showRandomInteger(0,1,rObj),
+					showRandomInteger(120,120,rObj),pesNumber, fileSize +showRandomInteger(15000, 20000,rObj), outputSize, utilizationModel, 
+					utilizationModel, utilizationModel,0.0);
+			cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
+			list.add(cloudlet[i]);
+			//seed++;
+		}
+
+		return list;
+	}
+	
+	/** Create tasks (Cloudlets) for the base station 3
+     * @param userId
+     * @param cloudlets
+     * @param START
+     * @param END
+     * @param idShift
+     * @param seed
+     * @return
+     * @throws IOException 
+     * @throws NumberFormatException 
+     */
+	
+	private static List<Cloudlet> createCloudletForBS3(int userId, int cloudlets, int START, int END, int idShift, long seed) throws NumberFormatException, IOException{
+		
+	   LinkedList<Cloudlet> list = new LinkedList<Cloudlet>();		/* Creates a container to store Cloudlets*/
+	   double[] arrList = new double[6020];
+		
+       File file = new File("/home/c00303945/Downloads/cloudsim-3.0.3/arrival4.dat");
+        
+       BufferedReader br = new BufferedReader(new FileReader(file));
+        //Scanner scan = null;
+
+       try {
+            //scan = new Scanner(file);
+            int index = 0;
+            String line = null;
+            while ((line=br.readLine())!=null) {
+               
+                String[] lineArray = line.split(",");
+                // do something with lineArray, such as instantiate an object
+                
+                arrList[index]= Double.parseDouble(lineArray[2]);
+                //System.out.println(arrList[index]);
+                index++;
+            							} 
+        }catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } 
+		
+		/*Task (Cloudlets) parameters*/
+		
+		long length; 												/* MI of the Cloudlet */
+		long fileSize = 100;
+		long outputSize = 300;
+		int pesNumber = 1;
+		double deadline = 0.0;
+		double priority = 0.0;
+		double xVal=0.0;
+		int taskType = 0;
+		
+		UtilizationModel utilizationModel = new UtilizationModelFull();
+
+		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
+
+		Random rObj = new Random();
+		rObj.setSeed(seed);
+		
+		for(int i=0;i<cloudlets;i++){
+	
+			//deadline = showRandomDouble(0.4, 1.5);
+			priority = Math.pow((1/Math.E),deadline);
+			length = gaussianMiGenerator(400, 1500,rObj,START,END);
+			
+			if(length <= 1500)
+			{
+				taskType = 1;
+			}
+			else if(length > 1500)
+			{
+				taskType = 2;
+			}
+			
+			xVal = showRandomInteger(1,4,rObj);
+			cloudlet[i] = new Cloudlet(taskType,idShift+i,length,deadline,priority,xVal,showRandomInteger(0,1,rObj),
+					showRandomInteger(120,120,rObj),pesNumber, fileSize +showRandomInteger(15000, 20000,rObj), outputSize, utilizationModel, 
+					utilizationModel, utilizationModel,0.0);
+			cloudlet[i].setUserId(userId);		/* Setting the owner of these Cloudlets */
+			list.add(cloudlet[i]);
+			//seed++;
+		}
+
+		return list;
+	}
+	
+	
 	/** A function to generate tasks randomly for different task arriving situations. 
 
 	 * This can be used for creating an oversibscribtion situation.
@@ -305,10 +635,10 @@ public class twoDataCenter {
 		
 	public static double Deadline(Cloudlet a,ETCmatrix b,double slack) {
 		
-		//long timeMillis = System.currentTimeMillis();
-       // long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
+		double uplinkDelay = (a.getCloudletFileSize()/54000000);
+		double arrivalTime = a.getArrivalTime();
 		
-		double deadline = (b.getMu(a.getTaskType(), 0)+b.getMu(a.getTaskType(),1)+b.getMu(a.getTaskType(),2))/3 + slack;
+		double deadline = (b.getMu(a.getTaskType(), 0)+b.getMu(a.getTaskType(),1)+b.getMu(a.getTaskType(),2)/3+slack+arrivalTime+uplinkDelay);
 		
 		a.setDeadline(deadline);
 		
@@ -347,14 +677,6 @@ public class twoDataCenter {
 	   return round(randomValue, 2);
 	  }
 
-	/*private static double zScoreCalculation(double mu, double sigma, double value) {
-		
-		double result = 0;
-		
-		result = (value - mu)/sigma;
-		
-		return round(result,2);
-	}*/
 	
 	private static double getConvolveProbability(double mu, double sigma, double deadLine) {
 		
@@ -379,33 +701,62 @@ public class twoDataCenter {
 	 * @param trial
 	 * @throws Exception 
 	 */
-	private static void loadBalancer(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3, DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3, ETCmatrix matrix,ETTmatrix ettmatrix, int trial  , long clockStartTime) throws Exception {
+	private static void loadBalancer(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3, DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3,Datacenter d0,Datacenter d1, Datacenter d2, ETCmatrix matrix,ETTmatrix ettmatrix, int trial) throws Exception {
 		
 		/* Create three batch queues for respective Base Stations. */
 		
 		List<Cloudlet> batchQueBS1 = new ArrayList<Cloudlet>();
 		List<Cloudlet> batchQueBS2 = new ArrayList<Cloudlet>();
 		List<Cloudlet> batchQueBS3 = new ArrayList<Cloudlet>();
-					
-		double slacktime1 = 0.25;
-		double slacktime2 = 0.12;
-		double slacktime3 = 0.19;
+		
+		double loseDeadline = 0;
+		
+		double slacktime1 = 1.45;
+		double slacktime2 = 1.52;
+		double slacktime3 = 1.79;
+		
+		
+		//double slacktime1 = 10.45;
+		//double slacktime2 = 15.52;
+		//double slacktime3 = 17.79;
+		
+		//double slacktime1 = 0.12;
+		//double slacktime2 = 0.12;
+		//double slacktime3 = 0.12;
+		
 		noTaskNotAllocated = 0;			
 		taskMissDBS1 = 0;
 		taskMissDBS2 = 0;
 		
 		
 		double temProbability[] = new double[3];
+		for(int y=0;y<3;y++) {
+			temProbability[y] = 0.0;
+		}
+		
+		
+		double baseStationProbability[] = new double[3];
+		for(int b=0;b<3;b++) {
+			baseStationProbability[b] = 0.0;
+		}
+	
 		double check;
 		int checkBS;
-		
+
 		double convMu;
 		double convSigma;
+		double convSigma1;
+		double convSigma2;
+		
+		
+		//int convergValue = 385;
 		
 		if(trial == 0)
 		{		
 			for(Cloudlet cloudlet:arrivingCloudlets) {
 				cloudlet.setUserId(broker1.getId());
+				
+				System.out.println("broker 1 id : "+ broker1.getId());
 				batchQueBS1.add(cloudlet);
 				deadLineFirst(cloudlet, slacktime1,vmMips1);
 			}
@@ -414,16 +765,20 @@ public class twoDataCenter {
 	
 		}
 		else if(trial == 1) {
+			
 			for(Cloudlet cloudlet:arrivingCloudlets) {
 				cloudlet.setUserId(broker2.getId());
+				System.out.println("broker 2 id : "+ broker2.getId());
 				batchQueBS2.add(cloudlet);
 				deadLineFirst(cloudlet, slacktime2,vmMips2);
 			}
 			broker2.submitCloudletList(batchQueBS2);
 		}
 		else if(trial == 2) {
+			
 			for(Cloudlet cloudlet:arrivingCloudlets) {
 				cloudlet.setUserId(broker3.getId());
+				System.out.println("broker 2 id : "+ broker3.getId());
 				batchQueBS3.add(cloudlet);
 				deadLineFirst(cloudlet, slacktime3,vmMips3);
 			}
@@ -435,132 +790,522 @@ public class twoDataCenter {
 			{
 				
 				if(cloudlet.getTaskType() == 1) {
-
+                    
+					System.out.println("%%%%%%% Task type 1 %%%%%%%%%%%");
 					check = -1.00;
 					checkBS = -1;
 					
 					for(int p=0;p<3;p++) {
 						if (p==0) {
 						
-							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1));
+							//if(baseStationProbability[p] < 0) {
+							//	baseStationProbability[p] = 0.0;
+							//}
+							
+							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1))-baseStationProbability[p];
+							
+											
 						}
 						else if(p==1) {
 							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
 							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
 							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2));
-						}
+							//if(baseStationProbability[p] < 0) {
+							//	baseStationProbability[p] = 0.0;
+							//}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2))-baseStationProbability[p];
+							//baseStationProbability[p] = baseStationProbability[p]+temProbability[p];
+						
+													}
 						else if(p==2) {
 							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
 							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
 							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3));
-				
+							//if(baseStationProbability[p] < 0) {
+							//	baseStationProbability[p] = 0.0;
+							//}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3))-baseStationProbability[p];
 						}
 						
-						System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
+						//System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
 						
 						if(temProbability[p] > check) {
 							
 							check = temProbability[p];
 							checkBS = p;
 						}
-					}
+		
 					
-					if(checkBS == 0 && temProbability[checkBS]!= 0.0) {
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
-						cloudlet.setUserId(broker1.getId());
-						batchQueBS1.add(cloudlet);
-						numTaskAllocatedBS1++;
-					}
-					else if(checkBS==1 && temProbability[checkBS]!= 0.0)
-					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
-						cloudlet.setUserId(broker2.getId());
-						batchQueBS2.add(cloudlet);
-						numTaskAllocatedBS2++;
+					}// end of probability calculation
+					
+					
+					// for loop to task allocation
+					for(int index = 0;index<3;index++) {
 						
-					}
-					else if(checkBS==2 && temProbability[checkBS]!= 0.0)
-					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
-						cloudlet.setUserId(broker3.getId());
-						batchQueBS3.add(cloudlet);
-						numTaskAllocatedBS3++;
+						if(checkBS == index) {
+							
+							if(checkBS == 0 && temProbability[checkBS] > 0.0) { // receiving base station
+							
+							Deadline(cloudlet, matrix, slacktime1);
+							cloudlet.setUserId(broker1.getId());
+							batchQueBS1.add(cloudlet);
+							
+							numTaskAllocatedBS1++;
+							allocatedTaskBS1++;
+
+							baseStationProbability[checkBS]+=  0.001; // base station 0
+							
+							}
+							else if (checkBS == 1 && temProbability[checkBS] > 0.0 ){ // base station 1
+							
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 1
+									
+									Deadline(cloudlet, matrix, slacktime2);
+									
+									cloudlet.setUserId(broker2.getId());
+									batchQueBS2.add(cloudlet);
+									
+									numTaskAllocatedBS2++;
+									allocatedTaskBS2++;
+									baseStationProbability[1]+=  0.09;
+								}
+												
+								
+							}// end of bs1 check
+							else if(checkBS == 2 && temProbability[checkBS] > 0.0 ) {
+								
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 2 (or 3rd BS)
+									
+									Deadline(cloudlet, matrix, slacktime3);
+									
+									cloudlet.setUserId(broker3.getId());
+									batchQueBS3.add(cloudlet);
+									
+									numTaskAllocatedBS3++;
+									allocatedTaskBS3++;
+									baseStationProbability[2]+=  0.01;
+								}
+								
+								
+								
+							}
+							else {
+								//no allocation
+								noTaskNotAllocated++;
+							}
+							
+							
+						} // end of main if condition
+
 						
-					}
-					else {
-						//cloudlet.setCloudletStatus(0);
-						noTaskNotAllocated++;
-					}
-	
-				}
+					} // end of index for loop
+					
+					
 				
-				else if(cloudlet.getTaskType() == 2) {
+//					
+//					if(checkBS == 0 && temProbability[checkBS] > 0.0) {
+//						Deadline(cloudlet, matrix, slacktime1);
+//						cloudlet.setUserId(broker1.getId());
+//						batchQueBS1.add(cloudlet);
+//						
+//						numTaskAllocatedBS1++;
+//						allocatedTaskBS1++;
+//
+//						baseStationProbability[checkBS]+=  0.001;
+//						
+//						temProbability[checkBS] = -1;
+//						
+//						
+//					}
+//										
+//						
+//						
+//					
+//					
+//					Arrays.sort(temProbability); // sorting the array in ascending order.
+//					
+//					
+//					if(temProbability[0]!=-1) {// that means receiving bs is not the highest one
+//						
+//					
+//						
+//												
+//					}
 					
+					
+					
+					
+//					
+//					if(checkBS == 0 && temProbability[checkBS] > 0.0) {
+//						Deadline(cloudlet, matrix, slacktime1);
+//						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+//						cloudlet.setUserId(broker1.getId());
+//						batchQueBS1.add(cloudlet);
+//						
+//						numTaskAllocatedBS1++;
+//						allocatedTaskBS1++;
+//				
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS1)/convergValue));
+//					
+//						//if(numTaskAllocatedBS1%10==0 && numTaskAllocatedBS1 > 0) {
+//							baseStationProbability[checkBS]+=  0.001;
+//							//baseStationProbability[checkBS]+= slacktime1/numTaskAllocatedBS1;
+//							
+//						//}
+//						
+//							//baseStationProbability[checkBS]+=  0.1;
+//						
+//					}
+//					else if(checkBS==1 && temProbability[checkBS]> 0.0)
+//					{
+//						Deadline(cloudlet, matrix, slacktime2);
+//						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+//						cloudlet.setUserId(broker2.getId());
+//						batchQueBS2.add(cloudlet);
+//						
+//						numTaskAllocatedBS2++;
+//						allocatedTaskBS2++;
+//						
+//							//baseStationProbability[checkBS]=  1/(Math.sqrt((numTaskAllocatedBS2)/convergValue));
+//						
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS2)/convergValue));
+//						
+//						//if(numTaskAllocatedBS2%10==0 && numTaskAllocatedBS2>0) {
+//						baseStationProbability[checkBS]+=  0.3;
+//
+//						//}
+//					}
+//					else if(checkBS==2 && temProbability[checkBS]> 0.0)
+//					{
+//						Deadline(cloudlet, matrix, slacktime3);
+//						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+//						cloudlet.setUserId(broker3.getId());
+//						batchQueBS3.add(cloudlet);
+//						
+//						numTaskAllocatedBS3++;
+//						allocatedTaskBS3++;
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS3)/convergValue));
+//						
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS3)/convergValue));
+//						//if(numTaskAllocatedBS3%10==0 && numTaskAllocatedBS3 > 0) {
+//						baseStationProbability[checkBS]+=  0.01;
+//						//}
+//					}
+//					else {
+//						//cloudlet.setCloudletStatus(0);
+//						noTaskNotAllocated++;
+//					}
+	
+				}// end of task type 1 checking 
+			   else if(cloudlet.getTaskType() == 2) {
+				   System.out.println("%%%%%%% Task type 2 %%%%%%%%%%%");
+				   
 					check = -1.00;
 					checkBS = -1;
-
+					
+	
 					for(int p = 0; p < 3; p++) { // calculating the probability and store the highest probability
 						if (p==0) {
 							
-							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1));
+							if(baseStationProbability[p] < 0) {
+								baseStationProbability[p] = 0.0;
+							}
+							
+							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1))-baseStationProbability[p];
+							
+						
+							
 						}
 						else if(p==1) {
 							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
 							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
 							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2));//Deadline(cloudlet,p,matrix,slacktime2)
+							if(baseStationProbability[p] < 0) {
+								baseStationProbability[p] = 0.0;
+							}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2))-baseStationProbability[p];//Deadline(cloudlet,p,matrix,slacktime2)
+
+						
 						}
 						else if(p==2) {
 							
 							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
 							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
 							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3));//Deadline(cloudlet,p,matrix,slacktime3)
-				
+							if(baseStationProbability[p] < 0) {
+								baseStationProbability[p] = 0.0;
+							}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3))-baseStationProbability[p];//Deadline(cloudlet,p,matrix,slacktime3)
+
 						}
 						
-						System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
+						//System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
 						
 						if(temProbability[p] > check) {
 							
 							check = temProbability[p];
 							checkBS = p;
 						}
+						
+												
 					} // end of probability calculation
 					
-					if(checkBS==0 && temProbability[checkBS]!= 0.0) {
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
-						cloudlet.setUserId(broker1.getId());
-						batchQueBS1.add(cloudlet);
-						//update etc ett
+					
+					
+					// for loop to task allocation
+					for(int index = 0;index<3;index++) {
 						
-						numTaskAllocatedBS1++;
-					}
-					else if(checkBS==1 && temProbability[checkBS]!= 0.0)
-					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
-						cloudlet.setUserId(broker2.getId());
-						batchQueBS2.add(cloudlet);
-						numTaskAllocatedBS2++;
+						if(checkBS == index) {
+							
+							if(checkBS == 0 && temProbability[checkBS] > 0.0) {
+							
+							Deadline(cloudlet, matrix, slacktime1);
+							cloudlet.setUserId(broker1.getId());
+							batchQueBS1.add(cloudlet);
+							
+							numTaskAllocatedBS1++;
+							allocatedTaskBS1++;
+
+							baseStationProbability[checkBS]+=  0.001;
+							
+							}
+							else if (checkBS == 1 && temProbability[checkBS] > 0.0 ){
+							
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 1
+									
+									Deadline(cloudlet, matrix, slacktime2);
+									
+									cloudlet.setUserId(broker2.getId());
+									batchQueBS2.add(cloudlet);
+									
+									numTaskAllocatedBS2++;
+									allocatedTaskBS2++;
+									baseStationProbability[1]+=  0.09;
+								}
+												
+								
+							}// end of bs1 check
+							else if(checkBS == 2 && temProbability[checkBS] > 0.0 ) {
+								
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 2 (or 3rd BS)
+									
+									Deadline(cloudlet, matrix, slacktime3);
+									
+									cloudlet.setUserId(broker3.getId());
+									batchQueBS3.add(cloudlet);
+									
+									numTaskAllocatedBS3++;
+									allocatedTaskBS3++;
+									baseStationProbability[1]+=  0.01;
+								}
+								
+								
+								
+							}
+							else {
+								//no allocation
+								noTaskNotAllocated++;
+							}
+							
+							
+						} // end of main if condition
+
 						
-					}
-					else if(checkBS==2 && temProbability[checkBS]!= 0.0)
-					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
-						cloudlet.setUserId(broker3.getId());
-						batchQueBS3.add(cloudlet);
-						numTaskAllocatedBS3++;
-						
-					}
-					else {
-						cloudlet.setCloudletStatus(0);
-						noTaskNotAllocated++;
-						
-					}
+					} // end of index for loop
+					
+					
+					
+					
+					
+								
+					
+					
+//					if(checkBS==0 && temProbability[checkBS]> 0.0) {
+//						Deadline(cloudlet, matrix, slacktime1);
+//						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+//						cloudlet.setUserId(broker1.getId());
+//						batchQueBS1.add(cloudlet);
+//						//update etc ett
+//						numTaskAllocatedBS1++;
+//						allocatedTaskBS1++;
+//						
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS1)/convergValue));
+//						
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS1)/convergValue));
+//						
+//						//if(numTaskAllocatedBS1%10==0 && numTaskAllocatedBS1 > 0) {
+//						baseStationProbability[checkBS]+=  0.001;
+//						//}
+//					}
+//					else if(checkBS==1 && temProbability[checkBS]> 0.0)
+//					{
+//						Deadline(cloudlet, matrix, slacktime2);
+//						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+//						cloudlet.setUserId(broker2.getId());
+//						batchQueBS2.add(cloudlet);
+//						numTaskAllocatedBS2++;
+//						allocatedTaskBS2++;
+//						
+//					
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS2)/convergValue));
+//						
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS2)/convergValue));
+//						//if(numTaskAllocatedBS2%10==0 && numTaskAllocatedBS2>0) {
+//						baseStationProbability[checkBS]+=  0.3;
+//						//}
+//					}
+//					else if(checkBS==2 && temProbability[checkBS]> 0.0)
+//					{
+//						Deadline(cloudlet, matrix, slacktime3);
+//						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+//						cloudlet.setUserId(broker3.getId());
+//						batchQueBS3.add(cloudlet);
+//						numTaskAllocatedBS3++;
+//						allocatedTaskBS3++;
+//						
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS3)/convergValue));
+//						
+//						
+//						//baseStationProbability[checkBS]=  1/(Math.sqrt((convergValue+numTaskAllocatedBS3)/convergValue));
+//						//if(numTaskAllocatedBS3%10==0 && numTaskAllocatedBS3>0) {
+//						baseStationProbability[checkBS]+=  0.01;
+//						//}
+//					}
+//					else {
+//						//cloudlet.setCloudletStatus(0);
+//						noTaskNotAllocated++;
+//						
+//					}
 				
-				}
+					
+					
+					
+					
+				}// end of task type 2
+				
+				
+				
+				
+				
 			}// END OF FOR LOOP
 			
 			broker1.submitCloudletList(batchQueBS1); 
@@ -575,48 +1320,497 @@ public class twoDataCenter {
 	
 	// Load balancer with task dropping
 	
-	private static void loadBalancerWithTaskDropping(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3, DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3, ETCmatrix matrix,ETTmatrix ettmatrix, int trial, double dropValue  ) throws Exception {
+	private static void loadBalancerWithTaskDropping(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3,DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3, ETCmatrix matrix,ETTmatrix ettmatrix, int trial, double dropValue  ) throws Exception {
 
-		/* Create three batch queues for respective Base Stations. */
+/* Create three batch queues for respective Base Stations. */
 		
 		List<Cloudlet> batchQueBS1 = new ArrayList<Cloudlet>();
 		List<Cloudlet> batchQueBS2 = new ArrayList<Cloudlet>();
 		List<Cloudlet> batchQueBS3 = new ArrayList<Cloudlet>();
-					
-		double slacktime1 = 0.25;
-		double slacktime2 = 0.12;
-		double slacktime3 = 0.19;
+		
+		double loseDeadline = 0;
+		
+		double slacktime1 = 1.45;
+		double slacktime2 = 1.52;
+		double slacktime3 = 1.79;
+	
 		noTaskNotAllocated = 0;			
 		taskMissDBS1 = 0;
 		taskMissDBS2 = 0;
 		
 		
 		double temProbability[] = new double[3];
+		for(int y=0;y<3;y++) {
+			temProbability[y] = 0.0;
+		}
+		
+		
+		double baseStationProbability[] = new double[3];
+		for(int b=0;b<3;b++) {
+			baseStationProbability[b] = 0.0;
+		}
+	
 		double check;
 		int checkBS;
-		
+
 		double convMu;
 		double convSigma;
+		double convSigma1;
+		double convSigma2;
+		
+		
+		//int convergValue = 385;
 		
 		if(trial == 0)
 		{		
 			for(Cloudlet cloudlet:arrivingCloudlets) {
-				cloudlet.setUserId(broker2.getId());
-				batchQueBS2.add(cloudlet);
-				deadLineFirst(cloudlet, slacktime2,vmMips2);
+				cloudlet.setUserId(broker1.getId());
+				
+				System.out.println("broker 1 id : "+ broker1.getId());
+				batchQueBS1.add(cloudlet);
+				deadLineFirst(cloudlet, slacktime1,vmMips1);
 			}
 			
-			broker2.submitCloudletList(batchQueBS2); 
-						
+			broker1.submitCloudletList(batchQueBS1); 
 	
 		}
 		else if(trial == 1) {
+			
+			for(Cloudlet cloudlet:arrivingCloudlets) {
+				cloudlet.setUserId(broker2.getId());
+				System.out.println("broker 2 id : "+ broker2.getId());
+				batchQueBS2.add(cloudlet);
+				deadLineFirst(cloudlet, slacktime2,vmMips2);
+			}
+			broker2.submitCloudletList(batchQueBS2);
+		}
+		else if(trial == 2) {
+			
+			for(Cloudlet cloudlet:arrivingCloudlets) {
+				cloudlet.setUserId(broker3.getId());
+				System.out.println("broker 2 id : "+ broker3.getId());
+				batchQueBS3.add(cloudlet);
+				deadLineFirst(cloudlet, slacktime3,vmMips3);
+			}
+			broker3.submitCloudletList(batchQueBS3);
+		}
+		else {
+			
+			for(Cloudlet cloudlet: arrivingCloudlets)
+			{
+				
+				if(cloudlet.getTaskType() == 1) {
+                    
+					System.out.println("%%%%%%% Task type 1 %%%%%%%%%%%");
+					check = -1.00;
+					checkBS = -1;
+					
+					for(int p=0;p<3;p++) {
+						if (p==0) {
+						
+							//if(baseStationProbability[p] < 0) {
+							//	baseStationProbability[p] = 0.0;
+							//}
+							
+							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1))-baseStationProbability[p];
+							
+											
+						}
+						else if(p==1) {
+							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
+							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
+							
+							//if(baseStationProbability[p] < 0) {
+							//	baseStationProbability[p] = 0.0;
+							//}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2))-baseStationProbability[p];
+							//baseStationProbability[p] = baseStationProbability[p]+temProbability[p];
+						
+													}
+						else if(p==2) {
+							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
+							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
+							
+							//if(baseStationProbability[p] < 0) {
+							//	baseStationProbability[p] = 0.0;
+							//}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3))-baseStationProbability[p];
+						}
+						
+						//System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
+						
+						if(temProbability[p] > check) {
+							
+							check = temProbability[p];
+							checkBS = p;
+						}
+		
+					
+					}// end of probability calculation
+					
+					
+					// for loop to task allocation
+					for(int index = 0;index<3;index++) {
+						
+						if(checkBS == index) {
+							
+							if(checkBS == 0 && temProbability[checkBS] > dropValue) { // receiving base station
+							
+							Deadline(cloudlet, matrix, slacktime1);
+							cloudlet.setUserId(broker1.getId());
+							batchQueBS1.add(cloudlet);
+							
+							numTaskAllocatedBS1++;
+							allocatedTaskBS1++;
+
+							baseStationProbability[checkBS]+=  0.001; // base station 0
+							
+							}
+							else if (checkBS == 1 && temProbability[checkBS] > dropValue ){ // base station 1
+							
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 1
+									
+									Deadline(cloudlet, matrix, slacktime2);
+									
+									cloudlet.setUserId(broker2.getId());
+									batchQueBS2.add(cloudlet);
+									
+									numTaskAllocatedBS2++;
+									allocatedTaskBS2++;
+									baseStationProbability[1]+=  0.09;
+								}
+												
+								
+							}// end of bs1 check
+							else if(checkBS == 2 && temProbability[checkBS] > dropValue ) {
+								
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 2 (or 3rd BS)
+									
+									Deadline(cloudlet, matrix, slacktime3);
+									
+									cloudlet.setUserId(broker3.getId());
+									batchQueBS3.add(cloudlet);
+									
+									numTaskAllocatedBS3++;
+									allocatedTaskBS3++;
+									baseStationProbability[2]+=  0.01;
+								}
+								
+							
+							}
+							else {
+								//no allocation
+								noTaskNotAllocated++;
+							}
+							
+							
+						} // end of main if condition
+
+						
+					} // end of index for loop
+					
+			
+			}// end of task type 1 checking 
+			else if(cloudlet.getTaskType() == 2) {
+				   System.out.println("%%%%%%% Task type 2 %%%%%%%%%%%");
+				   
+					check = -1.00;
+					checkBS = -1;
+					
+	
+					for(int p = 0; p < 3; p++) { // calculating the probability and store the highest probability
+						if (p==0) {
+							
+							if(baseStationProbability[p] < 0) {
+								baseStationProbability[p] = 0.0;
+							}
+							
+							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1))-baseStationProbability[p];
+							
+						
+							
+						}
+						else if(p==1) {
+							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
+							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
+							
+							if(baseStationProbability[p] < 0) {
+								baseStationProbability[p] = 0.0;
+							}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2))-baseStationProbability[p];//Deadline(cloudlet,p,matrix,slacktime2)
+
+						
+						}
+						else if(p==2) {
+							
+							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
+							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
+							
+							if(baseStationProbability[p] < 0) {
+								baseStationProbability[p] = 0.0;
+							}
+							
+							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3))-baseStationProbability[p];//Deadline(cloudlet,p,matrix,slacktime3)
+
+						}
+						
+						//System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
+						
+						if(temProbability[p] > check) {
+							
+							check = temProbability[p];
+							checkBS = p;
+						}
+						
+												
+					} // end of probability calculation
+					
+					
+					
+					// for loop to task allocation
+					for(int index = 0;index<3;index++) {
+						
+						if(checkBS == index) {
+							
+							if(checkBS == 0 && temProbability[checkBS] > dropValue) {
+							
+							Deadline(cloudlet, matrix, slacktime1);
+							cloudlet.setUserId(broker1.getId());
+							batchQueBS1.add(cloudlet);
+							
+							numTaskAllocatedBS1++;
+							allocatedTaskBS1++;
+
+							baseStationProbability[checkBS]+=  0.001;
+							
+							}
+							else if (checkBS == 1 && temProbability[checkBS] > dropValue ){
+							
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 1
+									
+									Deadline(cloudlet, matrix, slacktime2);
+									
+									cloudlet.setUserId(broker2.getId());
+									batchQueBS2.add(cloudlet);
+									
+									numTaskAllocatedBS2++;
+									allocatedTaskBS2++;
+									baseStationProbability[1]+=  0.09;
+								}
+												
+								
+							}// end of bs1 check
+							else if(checkBS == 2 && temProbability[checkBS] > dropValue ) {
+								
+								convSigma1 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 1), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 1), 2)));
+								convSigma2 = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), 2), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), 2), 2)));	
+								
+								if(temProbability[1]==temProbability[2]) { // if there is a tie 
+									
+									if(convSigma1 < convSigma2) {
+										//allocate task to bs 1
+										Deadline(cloudlet, matrix, slacktime2);
+										
+										cloudlet.setUserId(broker2.getId());
+										batchQueBS2.add(cloudlet);
+										
+										numTaskAllocatedBS2++;
+										allocatedTaskBS2++;
+										baseStationProbability[1]+=  0.09;
+										
+									}else {
+										//allocate task to bs 2
+										Deadline(cloudlet, matrix, slacktime3);
+										cloudlet.setUserId(broker3.getId());
+										batchQueBS3.add(cloudlet);
+										
+										numTaskAllocatedBS3++;
+										allocatedTaskBS3++;
+										baseStationProbability[2]+=  0.01;
+									}
+								}
+								else { // there is no tie and Base Station is 2 (or 3rd BS)
+									
+									Deadline(cloudlet, matrix, slacktime3);
+									
+									cloudlet.setUserId(broker3.getId());
+									batchQueBS3.add(cloudlet);
+									
+									numTaskAllocatedBS3++;
+									allocatedTaskBS3++;
+									baseStationProbability[1]+=  0.01;
+								}
+								
+								
+								
+							}
+							else {
+								//no allocation
+								noTaskNotAllocated++;
+							}
+							
+							
+						} // end of main if condition
+
+						
+					} // end of index for loop
+					
+				
+				}// end of task type 2
+				
+				
+				
+				
+				
+			}// END OF FOR LOOP
+			
+			broker1.submitCloudletList(batchQueBS1); 
+			broker2.submitCloudletList(batchQueBS2); 
+			broker3.submitCloudletList(batchQueBS3);
+		
+		}// end of else
+	
+		
+		
+	}
+	
+	private static void loadBalancerMECT(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3, DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3, ETCmatrix matrix,ETTmatrix ettmatrix, int trial) {
+	
+		List<Cloudlet> batchQueBS1 = new ArrayList<Cloudlet>();
+		List<Cloudlet> batchQueBS2 = new ArrayList<Cloudlet>();
+		List<Cloudlet> batchQueBS3 = new ArrayList<Cloudlet>();
+		
+		//double slacktime1 = 0.25;
+		//double slacktime2 = 0.12;
+		//double slacktime3 = 0.19;
+		
+		double loseDeadline=0;
+		
+		double slacktime1 = 1.45;
+		double slacktime2 = 1.52;
+		double slacktime3 = 1.79;
+		
+		noTaskNotAllocated = 0;			
+		taskMissDBS1 = 0;
+		taskMissDBS2 = 0;
+		
+		
+		double tempCompletionTime[] = new double[3];
+		for(int h=0;h<3;h++) {
+			tempCompletionTime[h]=0.0;
+		}
+		
+		double baseStationProbability[] = new double[3];
+		for(int b=0;b<3;b++) {
+			baseStationProbability[b] = 0.0;
+		}
+		
+
+		double check;
+		int checkBS;
+		
+		if(trial == 0)
+		{		
 			for(Cloudlet cloudlet:arrivingCloudlets) {
 				cloudlet.setUserId(broker1.getId());
 				batchQueBS1.add(cloudlet);
 				deadLineFirst(cloudlet, slacktime1,vmMips1);
 			}
-			broker1.submitCloudletList(batchQueBS1);
+			
+			broker1.submitCloudletList(batchQueBS1); 
+	
+		}
+		else if(trial == 1) {
+			for(Cloudlet cloudlet:arrivingCloudlets) {
+				cloudlet.setUserId(broker2.getId());
+				batchQueBS2.add(cloudlet);
+				deadLineFirst(cloudlet, slacktime2,vmMips2);
+			}
+			broker2.submitCloudletList(batchQueBS2);
 		}
 		else if(trial == 2) {
 			for(Cloudlet cloudlet:arrivingCloudlets) {
@@ -628,133 +1822,127 @@ public class twoDataCenter {
 		}
 		else {
 			
-			//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ In ETC matrix !!! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-			
 			for(Cloudlet cloudlet: arrivingCloudlets)
 			{
 				
 				if(cloudlet.getTaskType() == 1) {
 
-					check = -1.00;
+					check = 999999.9;
 					checkBS = -1;
 					
 					for(int p=0;p<3;p++) {
-						if (p==0) {
+					
+						if(p==0) {
 						
-							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1));
-						}
+							tempCompletionTime[p] = matrix.getMu(cloudlet.getTaskType(), p)-baseStationProbability[p];;
+						}			
 						else if(p==1) {
-							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
-							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
-							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2));
+							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
 						}
 						else if(p==2) {
-							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
-							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
-							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3));
-				
+							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
 						}
 						
-						System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
 						
-						if(temProbability[p] > check) {
+						if(tempCompletionTime[p] < check) {
 							
-							check = temProbability[p];
+							check = tempCompletionTime[p];
 							checkBS = p;
 						}
 					}
 					
-					if(checkBS == 0 && temProbability[checkBS]!= 0.0 && temProbability[checkBS] > dropValue) {
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+					if(checkBS == 0) {
+						Deadline(cloudlet, matrix, slacktime1);
 						cloudlet.setUserId(broker1.getId());
 						batchQueBS1.add(cloudlet);
 						numTaskAllocatedBS1++;
+						baseStationProbability[checkBS]+=  0.001;
+						
 					}
-					else if(checkBS==1 && temProbability[checkBS]!= 0.0 && temProbability[checkBS] > dropValue)
+					else if(checkBS==1)
 					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+						Deadline(cloudlet, matrix, slacktime2);
 						cloudlet.setUserId(broker2.getId());
 						batchQueBS2.add(cloudlet);
 						numTaskAllocatedBS2++;
+						baseStationProbability[checkBS]+=  0.09;
 						
 					}
-					else if(checkBS==2 && temProbability[checkBS]!= 0.0 && temProbability[checkBS] > dropValue)
+					else if(checkBS==2)
 					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+						Deadline(cloudlet, matrix, slacktime3);
 						cloudlet.setUserId(broker3.getId());
 						batchQueBS3.add(cloudlet);
 						numTaskAllocatedBS3++;
+						baseStationProbability[checkBS]+=  0.01;
+						
 						
 					}
 					else {
-						//cloudlet.setCloudletStatus(0);
 						noTaskNotAllocated++;
 					}
 	
-				}
+				} // END of task type 1
 				
 				else if(cloudlet.getTaskType() == 2) {
 					
-					check = -1.00;
+					check = 999999.9;
 					checkBS = -1;
 
-					for(int p = 0; p < 3; p++) { // calculating the probability and store the highest probability
-						if (p==0) {
-							
-							temProbability[p] = matrix.getProbability(cloudlet.getTaskType(), p, Deadline(cloudlet,matrix,slacktime1));
+					for(int p = 0; p < 3; p++) { // calculating min completion time
+						
+						if(p==0) {
+						tempCompletionTime[p] = matrix.getMu(cloudlet.getTaskType(), p)-baseStationProbability[p];
+						
 						}
 						else if(p==1) {
-							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
-							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
+						tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
 							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime2));//Deadline(cloudlet,p,matrix,slacktime2)
 						}
-						else if(p==2) {
-							
-							convMu = matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p);
-							convSigma = Math.sqrt((Math.pow(matrix.getSigma(cloudlet.getTaskType(), p), 2) + Math.pow(ettmatrix.getSigma(cloudlet.getTaskType(), p), 2)));
-							
-							temProbability[p] = getConvolveProbability(convMu, convSigma, Deadline(cloudlet,matrix,slacktime3));//Deadline(cloudlet,p,matrix,slacktime3)
-				
+						else if(p==2)
+						{
+							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
 						}
 						
-						System.out.println(" probabilities of task type"+ cloudlet.getTaskType() +" in Base Stations "+ p+ "  is : " + temProbability[p] );
 						
-						if(temProbability[p] > check) {
+						if(tempCompletionTime[p] < check) {
 							
-							check = temProbability[p];
+							check = tempCompletionTime[p];
 							checkBS = p;
 						}
 					} // end of probability calculation
 					
-					if(checkBS==0 && temProbability[checkBS]!= 0.0 && temProbability[checkBS] > dropValue) {
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+					if(checkBS==0) {
+						Deadline(cloudlet, matrix, slacktime1);
 						cloudlet.setUserId(broker1.getId());
 						batchQueBS1.add(cloudlet);
 						//update etc ett
 						
 						numTaskAllocatedBS1++;
+						baseStationProbability[checkBS]+=  0.001;
+						
 					}
-					else if(checkBS==1 && temProbability[checkBS]!= 0.0 && temProbability[checkBS] > dropValue)
+					else if(checkBS==1)
 					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+						Deadline(cloudlet, matrix, slacktime2);
 						cloudlet.setUserId(broker2.getId());
 						batchQueBS2.add(cloudlet);
 						numTaskAllocatedBS2++;
+						baseStationProbability[checkBS]+=  0.09;
+						
 						
 					}
-					else if(checkBS==2 && temProbability[checkBS]!= 0.0 && temProbability[checkBS] > dropValue)
+					else if(checkBS==2)
 					{
-						System.out.println(" Highest Probability @@@@@@@@@@@@@@@##########"+temProbability[checkBS] + " Base Station ##########"+checkBS);
+						Deadline(cloudlet, matrix, slacktime3);
 						cloudlet.setUserId(broker3.getId());
 						batchQueBS3.add(cloudlet);
 						numTaskAllocatedBS3++;
+						baseStationProbability[checkBS]+=  0.01;
+						
 						
 					}
 					else {
-						cloudlet.setCloudletStatus(0);
 						noTaskNotAllocated++;
 						
 					}
@@ -769,69 +1957,9 @@ public class twoDataCenter {
 		}// end of else
 		
 		
-		
 	}
 	
 	
-	
-	
-	private static void noLoadBalancer(List<Cloudlet> arrivingCloudlets, int vmMips1, int vmMips2,int vmMips3, DatacenterBroker broker1, DatacenterBroker broker2, DatacenterBroker broker3, ETCmatrix matrix,ETTmatrix ettmatrix, int trial  ) throws Exception {
-	
-	
-		List<Cloudlet> batchQueBS1 = new ArrayList<Cloudlet>();
-		List<Cloudlet> batchQueBS2 = new ArrayList<Cloudlet>();
-		List<Cloudlet> batchQueBS3 = new ArrayList<Cloudlet>();
-		
-		double slacktime1 = 0.15;
-		double slacktime2 = 0.25;
-		double slacktime3 = 0.17;
-		
-		
-		if(trial==0) {
-
-			for(Cloudlet cloudlet:arrivingCloudlets) {
-				cloudlet.setUserId(broker2.getId());
-				batchQueBS2.add(cloudlet);
-				deadLineFirst(cloudlet, slacktime2,vmMips2);
-			}
-				
-			broker2.submitCloudletList(batchQueBS2);
-		
-		}
-		else if(trial==1) {
-			
-			for(Cloudlet cloudlet:arrivingCloudlets) {
-				cloudlet.setUserId(broker1.getId());
-				batchQueBS1.add(cloudlet);
-				deadLineFirst(cloudlet, slacktime1,vmMips1);
-			}
-			broker1.submitCloudletList(batchQueBS1);
-			
-		}
-		else if(trial==2) {
-			
-			for(Cloudlet cloudlet:arrivingCloudlets) {
-				cloudlet.setUserId(broker3.getId());
-				batchQueBS3.add(cloudlet);
-				deadLineFirst(cloudlet, slacktime3,vmMips3);
-			}
-			broker3.submitCloudletList(batchQueBS3);
-		
-		}
-		else {
-			
-			for(Cloudlet cloudlet:arrivingCloudlets) {
-				Deadline(cloudlet,matrix,0.01);
-			}
-		
-			broker1.submitCloudletList(arrivingCloudlets);
-			//broker1.submitCloudletList(cloudletList3);
-		
-		}
-	
-	}
-	
-
      /**
 	 * Creates main() to run the example
 	 * @throws IOException 
@@ -845,6 +1973,7 @@ public class twoDataCenter {
 		int arrivingTasks = 0;
 		int lbOption = -1;
 		long userSeed=0;
+		int initialWorkload=50;
 		
 		//boolean lbOnOff = false;
 		String SchPolicy=null;
@@ -856,7 +1985,7 @@ public class twoDataCenter {
 		printWriter.println();
 		printWriter.println("Starting Simulation for V2I task processing...");
 		printWriter.println();
-		printWriter.println("100 trials, 100 clouldets and Using No load Balancer");
+		//printWriter.println("100 trials, 100 clouldets and Using No load Balancer");
 		
 		try{
 		
@@ -892,10 +2021,55 @@ public class twoDataCenter {
 		printWriter.println("User Seed :"+userSeed);
 		printWriter.println();
 		
+//		 arrList1 = new double[5826];
+//		
+//	     File file1 = new File("/home/c00303945/Downloads/cloudsim-3.0.3/arrival2.dat");
+//	        
+//	     BufferedReader br1 = new BufferedReader(new FileReader(file1));
+//	     try {
+//	            int index = 0;
+//	            String line = null;
+//	            while ((line=br1.readLine())!=null) {
+//	               
+//	                String[] lineArray = line.split(",");
+//              
+//	                arrList1[index]= Double.parseDouble(lineArray[2]);
+//
+//	                index++;
+//	            							} 
+//	        }catch (FileNotFoundException e) {
+//	            e.printStackTrace();
+//	     }
+    
+//	     
+//		 arrList2 = new double[6848];
+//			
+//	     File file2 = new File("/home/c00303945/Downloads/cloudsim-3.0.3/arrival3.dat");
+//	        
+//	     BufferedReader br2 = new BufferedReader(new FileReader(file2));
+//	     try {
+//	            int index = 0;
+//	            String line = null;
+//	            while ((line=br2.readLine())!=null) {
+//	               
+//	                String[] lineArray = line.split(",");
+//               
+//	                arrList2[index]= Double.parseDouble(lineArray[2]);
+//
+//	                index++;
+//	            							} 
+//	        }catch (FileNotFoundException e) {
+//	            e.printStackTrace();
+//	     } 
+//		
+	
 		/* Trial loop */
+	       
+	   // long startTime = System.currentTimeMillis();   
 		
-		for(int i = 0;i <number;i++) {
-		try {
+	    for(int i = 0;i <number;i++) {
+			
+			try {
 			printWriter.println("Trial No : "+ i);
 			//allTaskNotAllocated = ;
 			
@@ -912,9 +2086,9 @@ public class twoDataCenter {
 			@SuppressWarnings("unused")
 			Datacenter datacenter0 = createDatacenter("BaseStation_0",1,0,60,54000000);	/* Base Station x with coordinates 0 and the range of 60 meters. */
 			@SuppressWarnings("unused")
-			Datacenter datacenter1 = createDatacenter("BaseStation_1",1,5,65,52000000);	/* Base Station x  with coordinates 5 and the range of 65 meters. */
+			Datacenter datacenter1 = createDatacenter("BaseStation_1",1,5,65,54000000);	/* Base Station x  with coordinates 5 and the range of 65 meters. */
 			@SuppressWarnings("unused")
-			Datacenter datacenter2 = createDatacenter("BaseStation_2",1,-2.5,50,53000000); /* Base Station x  with coordinates -2.5 and the range of 50 meters. */
+			Datacenter datacenter2 = createDatacenter("BaseStation_2",1,-2.5,52,50000000); /* Base Station x  with coordinates -2.5 and the range of 50 meters. */
 			//////End Of Base Station Creation//////
 			
 			
@@ -925,11 +2099,15 @@ public class twoDataCenter {
 			broker1.submitVmList(vmlist1);
 			broker1.setSchedulerPolicy(SchPolicy);
 			
+			////////////////////////////////////////////////////
+			
 			DatacenterBroker broker2 = createBroker("broker2");
 			int vmMips2 = 2000;
 			vmlist2 = createVM_N(broker2.getId(), 5,vmMips2, 1001);
 			broker2.submitVmList(vmlist2);
 			broker2.setSchedulerPolicy(SchPolicy);
+			
+			//////////////////////////////////////////////////////
 			
 			DatacenterBroker broker3 = createBroker("broker3");
 			int vmMips3 = 2500;
@@ -939,146 +2117,209 @@ public class twoDataCenter {
 			
 			/* End of broker creation - Razin.*/
 		
-//			if(i>=0 && i<3)
-//			{
-//				userSeed = userSeed + 1000;
+			if(i>2) {
+				
+				userSeed = userSeed +20000;
+				
+			}
+			
+			numTasksAdmitted = arrivingTasks;
+			cloudletList3 = createCloudlet(broker1.getId(),numTasksAdmitted,100,2000,550000,userSeed); // Testing workload.cloudlet ID starts from 3000
+			
+			
+//			double at = 0.0;
+//			for(Cloudlet cloudlet:cloudletList3) {
+//				if(cloudlet.getArrivalTime() > at) {
+//					at = cloudlet.getArrivalTime();
+//				}
+//				
+//			}
+//			printWriter.println();
+//			printWriter.println ("Latest arrivaltime : "+at);
+//			printWriter.println();
+			
+//			overSubsList1 = createCloudlet(broker1.getId(),1000,100,2000,7000,userSeed);
+//			for(int h=0;h<1000;h++) {
+//				
+//				if (arrList1[h] < at) {
+//					overSubsList1.get(h).setArrivalTime(arrList1[h]);
+//				}
+//				
 //			}
 			
-			//int numTasksAdmitted = arrivingTasks;
-			long startTime = System.currentTimeMillis();
-	
-			numTasksAdmitted = arrivingTasks;
+			// Generating three workload for 3 Base Station
+			initialWorkload = 1000;
 			
-			
-			//cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-20),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
-     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
-			
-     		//userSeed = userSeed + 1000;
-     		
-     		// Generating three workload for 3 Base Station 
-     		cloudletList4 = createCloudlet(broker1.getId(),10,100,2000,400,1850);
-     		cloudletList5 = createCloudlet(broker2.getId(),10,100,2000,600,15000);
-     		cloudletList6 = createCloudlet(broker3.getId(),10,100,2000,800,3986);
+     		cloudletList4 = createInitialWorkLoad(broker1.getId(),initialWorkload,100,2000,1000,1850);
+     		cloudletList5 = createInitialWorkLoad(broker2.getId(),initialWorkload,100,2000,30000,15000);
+     		cloudletList6 = createInitialWorkLoad(broker3.getId(),initialWorkload,100,2000,60000,3986);
      		//Workload END
      		
-     		
-     		for(Cloudlet cloudlet:cloudletList4)
-     		{
-     			deadLineFirst(cloudlet, 0.25,vmMips1);
-     		
-     		}
-     		
-     		for(Cloudlet cloudlet:cloudletList5)
-     		{
-     			deadLineFirst(cloudlet, 0.12,vmMips2);
-     		
-     		}
-     		
-     		for(Cloudlet cloudlet:cloudletList6)
-     		{
-     			deadLineFirst(cloudlet, 0.19,vmMips3);
-     		
-     		}
-     		
-     		broker1.submitCloudletList(cloudletList4);
-     		broker2.submitCloudletList(cloudletList5);
-     		broker3.submitCloudletList(cloudletList6);
-     		
-     		//for(int b=0;b<dataCenterNum;b++)
-			//{
-			//	workloadList.add(createCloudlet(broker1.getId(),(numTasksAdmitted-20),100,2000,200+(b*100),userSeed));
-			//}
-     		
-     		
-     		
-     		/*
-			if(i==3) {
-				
-				numTasksAdmitted = 100;
-				
-				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-90),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
-	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
-				
-				
-			}
-			else if(i==4)
-			{
-				numTasksAdmitted = 200;
-				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-190),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
-	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
-				
-			}
-			else if(i==5)
-			{
-				numTasksAdmitted = 300;
-				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-290),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
-	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
-				
-			}
-			else if(i==6)
-			{
-				numTasksAdmitted = 400;
-				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-390),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
-	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
-				
-			}
-			else if(i==7)
-			{
-				numTasksAdmitted = 500;
-				cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-490),100,2000,1,userSeed);// tasks ranging 1100 to 1500 mi
-	     		cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,userSeed); // tasks ranging 1500 to 2000 mi
-				
-			}
-			*/
- 		
-     		
-						
-			/* Set the number of tasks arriving to the Base Station. */
-			//cloudletList2 = createCloudlet(broker1.getId(),(numTasksAdmitted-40),100,2000,1,400);// tasks ranging 1100 to 1500 mi
-     		//cloudletList3 = createCloudlet(broker1.getId(),(numTasksAdmitted-10),100,2000,100,400); // tasks ranging 1500 to 2000 mi
-			
+//     		
+//     		for(Cloudlet cloudlet:cloudletList6) {
+//     			
+//     			printWriter.println(" broker id :::::" + broker3.getId());
+//     			printWriter.println(" user id :::::" + cloudlet.getUserId());
+//     			
+//     		}
+//		
      		numTaskAllocatedBS1 = 0;
     		numTaskAllocatedBS2 = 0;
     		numTaskAllocatedBS3 = 0;
-     		
-     		if (lbOption == 1) { // load balancer on without task dropping
-     			if(i==0) {
-     				loadBalancer(cloudletList4, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
-     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
-     			}
-     			else if(i==1) {
-     				loadBalancer(cloudletList5, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+    		
+    		allocatedTaskBS1 = 0;
+    		allocatedTaskBS2 = 0;
+    		allocatedTaskBS3 = 0;
+    		
+    		if (lbOption == 1) { // load balancer on without task dropping
+     			if(i == 0) {
+     				//broker1.submitCloudletList(cloudletList4); 
      				
+     				loadBalancer(cloudletList4, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,datacenter0,datacenter1,datacenter2, matrix,ettMatrix,i);
      				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
      			}
-     			else if(i==2) {
-     				loadBalancer(cloudletList6, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			else if(i == 1) {
+     				loadBalancer(cloudletList5, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,datacenter0,datacenter1,datacenter2, matrix,ettMatrix,i);
+     				//broker2.submitCloudletList(cloudletList5);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i == 2) {
+     				loadBalancer(cloudletList6, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,datacenter0,datacenter1,datacenter2, matrix,ettMatrix,i);
+     				//broker3.submitCloudletList(cloudletList6);
      				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
      			}
      			else {
-     				loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     				/*
+     				for(Cloudlet cloudlet:cloudletList4) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				for(Cloudlet cloudlet:cloudletList5) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				for(Cloudlet cloudlet:cloudletList6) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				*/
+     				broker1.submitCloudletList(cloudletList4); 
+     				broker2.submitCloudletList(cloudletList5); 
+     				broker3.submitCloudletList(cloudletList6);
+     				loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,datacenter0,datacenter1,datacenter2, matrix,ettMatrix,i);
      			}
      			
 			}
      		else if(lbOption==2) { // load balancer with task dropping
      			if(i==0) {
-     			loadBalancerWithTaskDropping(cloudletList2, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,0.5);
-     			loadBalancerWithTaskDropping(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,0.5);
+     				loadBalancerWithTaskDropping(cloudletList4, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,0.7);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==1) {
+     				loadBalancerWithTaskDropping(cloudletList5, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,0.7);
+     				
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==2) {
+     				loadBalancerWithTaskDropping(cloudletList6, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,0.7);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else {
+     				/*
+     				for(Cloudlet cloudlet:cloudletList4) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				for(Cloudlet cloudlet:cloudletList5) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				for(Cloudlet cloudlet:cloudletList6) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				*/
+     				broker1.submitCloudletList(cloudletList4); 
+     				broker2.submitCloudletList(cloudletList5); 
+     				broker3.submitCloudletList(cloudletList6);
+     				loadBalancerWithTaskDropping(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,matrix,ettMatrix,i,0.7);
      			}
      			
      			
      		}
-			else {
-				noLoadBalancer(cloudletList2, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
-				noLoadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
+     		else if(lbOption==4) { // load balancer MECT
+     			if(i==0) {
+     				loadBalancerMECT(cloudletList4, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==1) {
+     				loadBalancerMECT(cloudletList5, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
+     				
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==2) {
+     				loadBalancerMECT(cloudletList6, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else {
+     				
+     				for(Cloudlet cloudlet:cloudletList4) {
+     					Deadline(cloudlet,matrix,1.45);
+     				}
+     				for(Cloudlet cloudlet:cloudletList5) {
+     					Deadline(cloudlet,matrix,1.52);
+     				}
+     				for(Cloudlet cloudlet:cloudletList6) {
+     					Deadline(cloudlet,matrix,1.79);
+     				}
+     								
+     				broker1.submitCloudletList(cloudletList4); 
+     				broker2.submitCloudletList(cloudletList5); 
+     				broker3.submitCloudletList(cloudletList6);
+   				
+     				loadBalancerMECT(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i);
+     				
+     			}
+     			
+     			
+     		}
+     		else {
+				if(i==0) {
+     				loadBalancer(cloudletList4, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,datacenter0,datacenter1,datacenter2, matrix,ettMatrix,i);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==1) {
+     				loadBalancer(cloudletList5, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,datacenter0,datacenter1,datacenter2, matrix,ettMatrix,i);
+     				
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else if(i==2) {
+     				loadBalancer(cloudletList6, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3,datacenter0,datacenter1,datacenter2, matrix,ettMatrix,i);
+     				//loadBalancer(cloudletList3, vmMips1, vmMips2, vmMips3, broker1, broker2, broker3, matrix,ettMatrix,i,startTime);
+     			}
+     			else {
+     				
+     				for(Cloudlet cloudlet:cloudletList4) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				for(Cloudlet cloudlet:cloudletList5) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				for(Cloudlet cloudlet:cloudletList6) {
+     					Deadline(cloudlet,matrix,0.12);
+     				}
+     				
+     				
+     				broker1.submitCloudletList(cloudletList4); 
+     				broker2.submitCloudletList(cloudletList5); 
+     				broker3.submitCloudletList(cloudletList6);
+     				
+     				double nLD = 10;
+     				
+     				for(Cloudlet cloudlet:cloudletList3) {
+     					Deadline(cloudlet,matrix,1.45);
+     				}
+     				broker1.submitCloudletList(cloudletList3);
+     			}
+     			
+
 			}
-			
-			
-     		//System.out.println("############Clock time before start simulation ::::"+CloudSim.clock());
      		
-     		///CloudSim.clock();
-     		
-			/* Fifth step: Start the simulation. */
+		   /* Fifth step: Start the simulation. */
 			
 			CloudSim.startSimulation();
 			
@@ -1086,25 +2327,51 @@ public class twoDataCenter {
 			/* Final step: Print results when simulation is over. */
 			
 			List<Cloudlet> newList = broker1.getCloudletReceivedList();
-			//List<VTasks> newList1 = broker1.getVTasksReceivedList();
-			
 			newList.addAll(broker2.getCloudletReceivedList());
 			newList.addAll(broker3.getCloudletReceivedList());
-			//taskDstrList.addAll(cloudletList2);
 			
-			for(Cloudlet cloudlet:newList) {
-				
-				System.out.println(" CLouldet ::::: "+cloudlet.getCloudletId()+"  waiting time  " + cloudlet.getWaitingTime());
-	
-			}
-			
+//			double at = 0.0;
+//			for(Cloudlet cloudlet:cloudletList3) {
+//				if(cloudlet.getArrivalTime() > at) {
+//					at = cloudlet.getArrivalTime();
+//				}
+//				
+//			}
+//			printWriter.println();
+//			printWriter.println ("Latest arrivaltime : "+at);
+//			printWriter.println();
 			
 			taskDstrList.addAll(newList);
-			getDistribution(cloudletList3);
-			getETTDistribution(cloudletList3, datacenter0, datacenter1, datacenter2);
-			
-			ettMatrix = new ETTmatrix(taskTypeNum, dataCenterNum, trTimes);
-			matrix = new ETCmatrix(taskTypeNum, dataCenterNum, distributions);
+			if(i==0) {
+				
+				getDistribution(cloudletList4);
+				getETTDistribution(cloudletList4, datacenter0, datacenter1, datacenter2);
+				
+				ettMatrix = new ETTmatrix(taskTypeNum, dataCenterNum, trTimes);
+				matrix = new ETCmatrix(taskTypeNum, dataCenterNum, distributions);
+				
+			}
+			else if(i==1) {
+				getDistribution(cloudletList5);
+				getETTDistribution(cloudletList5, datacenter0, datacenter1, datacenter2);
+				
+				ettMatrix = new ETTmatrix(taskTypeNum, dataCenterNum, trTimes);
+				matrix = new ETCmatrix(taskTypeNum, dataCenterNum, distributions);
+			}
+			else if(i==2) {
+				getDistribution(cloudletList6);
+				getETTDistribution(cloudletList6, datacenter0, datacenter1, datacenter2);
+				
+				ettMatrix = new ETTmatrix(taskTypeNum, dataCenterNum, trTimes);
+				matrix = new ETCmatrix(taskTypeNum, dataCenterNum, distributions);
+			}
+			else {
+				getDistribution(cloudletList3);
+				getETTDistribution(cloudletList3, datacenter0, datacenter1, datacenter2);
+				
+				ettMatrix = new ETTmatrix(taskTypeNum, dataCenterNum, trTimes);
+				matrix = new ETCmatrix(taskTypeNum, dataCenterNum, distributions);
+			}
 			
 			
 			// pasuing the simulation for 1 seconds between each trial 
@@ -1118,40 +2385,29 @@ public class twoDataCenter {
 //			}
 			//End of pausing
 			
-			
-			
 			CloudSim.stopSimulation();
-			
-			System.out.println("#############Clock time after stop simulation ::::"+CloudSim.clock());
-				
 
-//     		for(Cloudlet cloudlet:cloudletList2) {
-//     			
-//     			System.out.println("Completion time ++++++++++++++++ "+(cloudlet.getFinishTime() - cloudlet.getSubmissionTime()));
-//     			
-//     		}
-//     		
-            for(Cloudlet cloudlet:cloudletList3) {
-     			
-     			System.out.println("Completion time ++++++++++++++++ "+(cloudlet.getFinishTime() - cloudlet.getSubmissionTime()));
-     		}
-			
-			
-            
             //System.out.println("^^^^^^^^ list of cloudlets^^^^^^^^^^^ "+taskDstrList.size()); 
-			 printCloudletList(newList,printWriter);
+			 printCloudletList(newList,printWriter,numTasksAdmitted);
 		
 			
 			allTaskNotAllocated.add(noTaskNotAllocated);
 			printWriter.println();
-			System.out.println(" All counter array ::"+ allCounters.toString());
+			
+			//if (i==102) {
+			//System.out.println(" All counter array ::"+ allCounters.toString());
 			printWriter.println(" All counter array ::"+ allCounters.toString());
 			printWriter.println();
+			printWriter.println(" allTaskNotAllocated array ::"+ allTaskNotAllocated.toString());
+			//}
 			
-			printWriter.println();
+			
+			//printWriter.println();
+			
+			//printWriter.println();
 			System.out.println(" Task not allocated Array ::"+ allTaskNotAllocated.toString());
-			printWriter.println(" Task not allocated Array ::"+ allTaskNotAllocated.toString());
-			printWriter.println();
+			//printWriter.println(" Task not allocated Array ::"+ allTaskNotAllocated.toString());
+			//printWriter.println();
 			
 			
 			//HashMap<String, NormalDistribution> newDistr = getDistribution(taskDstrList);
@@ -1188,9 +2444,9 @@ public class twoDataCenter {
 			printWriter.println("$$$$$$$ Type 2 , Base Station 2 : " + matrix.getSigma(2,2) + " " + matrix.getMu(2, 2));
 			
 			
-			//double deadLineMissRate = noTaskNotAllocated / (double)numTasksAdmitted;
-			//System.out.println("No of task not allocated : "+ noTaskNotAllocated +" Allocation miss rate : "+ deadLineMissRate);
-			//printWriter.println("No of task not allocated : "+ noTaskNotAllocated +" Allocation miss rate : "+ deadLineMissRate);
+			double deadLineMissRate = noTaskNotAllocated / (double)numTasksAdmitted;
+			System.out.println("No of task not allocated : "+ noTaskNotAllocated +" Allocation miss rate : "+ deadLineMissRate);
+			printWriter.println("No of task not allocated : "+ noTaskNotAllocated +" Allocation miss rate : "+ deadLineMissRate);
 			
 			
 			System.out.println(" No of task not allocated ::::@@@#########  "+noTaskNotAllocated);
@@ -1210,6 +2466,7 @@ public class twoDataCenter {
 
 			printWriter.println();
 			printWriter.println("End of trail : "+ i);
+		
 		}
 		catch (Exception e)
 		{
@@ -1220,9 +2477,86 @@ public class twoDataCenter {
 		}
 		
 	}
+		
+		//take allcounter array and provide the average
+		
+		double sizeOfArray = allCounters.size();
+		double sum = 0;
+		double result = 0;
+		double checkMax=-1;
+		double checkMin=200000;
+		
+		for(int x=0;x<sizeOfArray;x++)
+		{
+			sum = sum + allCounters.get(x);
+			
+			if(x>3) {
+				if(allCounters.get(x)>checkMax) {
+					
+					checkMax = allCounters.get(x);
+				}
+				
+				if(allCounters.get(x)<checkMin) {
+					checkMin = allCounters.get(x);
+				}
+			}
+			
+		}
+		
+		result = (sum/(sizeOfArray-3));
+		
+		
+		double sd = 0;
+		for (int i = 3; i <sizeOfArray; i++)
+		{
+			
+		    sd += Math.pow((allCounters.get(i) - result), 2) / (sizeOfArray-3);
+		}
+		double standardDeviation = Math.sqrt(sd);
+		
+		
+		
+		String str = null;
+		if(lbOption == 1) {
+			str = "with MR load balancer ("+SchPolicy+")";
+		}
+		else if(lbOption==2) {
+			str = "with load balancer task dropping probability threshold ("+SchPolicy+")";
+		}
+		else if(lbOption==4) {
+			str = "with MECT load balancer ("+SchPolicy+")";
+		}
+		else {str = "with no load balancer ("+SchPolicy+")";};
+		
+		FileWriter flwrt = new FileWriter("/home/c00303945/Desktop/Results_6th_April/FCFS_increased_Arrival_Task.txt",true);
+		PrintWriter prttWrt = new PrintWriter(flwrt);
+		
+		prttWrt.println();
+		prttWrt.println("Number of tasks submitted "+arrivingTasks);
+		prttWrt.println("Initial Over Subscription Workload : " + initialWorkload);
+		prttWrt.println("All counter array ::"+ allCounters.toString()+ " "+ str); 
+		prttWrt.println("Average of task missing deadline : " + result);
+		prttWrt.println("Min : " + checkMin);
+		prttWrt.println("Max : " + checkMax);
+		prttWrt.println("Standard Deviation : "+standardDeviation);
+		prttWrt.println("============================================================================================");
+		prttWrt.close();
+		
+		
+		System.out.println("Average of task missing deadline : " + result);
+		printWriter.println("Number of tasks "+arrivingTasks);
+		printWriter.println("All counter array ::"+ allCounters.toString()+ " "+ str); 
+		printWriter.println("Average of task missing deadline : " + result);
+		printWriter.println("Min : " + checkMin);
+		printWriter.println("Max : " + checkMax);
+		printWriter.println("Standard Deviation : "+standardDeviation);
+		
+		
+		//}
 		printWriter.println("V2I task processing finished!");
 		printWriter.println("********************************************************************************************************");
 		printWriter.close();
+		
 		
 	}
 	
@@ -1247,7 +2581,11 @@ public class twoDataCenter {
 		peList1.add(new Pe(1, new PeProvisionerSimple(mips)));
 		peList1.add(new Pe(2, new PeProvisionerSimple(mips)));
 		peList1.add(new Pe(3, new PeProvisionerSimple(mips)));
-		peList1.add(new Pe(4, new PeProvisionerSimple(mips))); // need to store Pe id and MIPS Rating
+		peList1.add(new Pe(4, new PeProvisionerSimple(mips)));// need to store Pe id and MIPS Rating
+		//peList1.add(new Pe(5, new PeProvisionerSimple(mips)));
+		//peList1.add(new Pe(6, new PeProvisionerSimple(mips)));
+		//peList1.add(new Pe(7, new PeProvisionerSimple(mips)));
+		//8 cores
 		
 		//4. Create Hosts with its id and list of PEs and add them to the list of machines
 		int hostId=0;
@@ -1330,8 +2668,7 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 					transferTime = (double)cloudlet.getCloudletFileSize()/dc2.getBandWidth();
 				}
 				
-				
-				transferTimes.put(key,transferTime);	
+			transferTimes.put(key,transferTime);	
 			}
 		}
 		
@@ -1368,8 +2705,6 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 
 		}
 
-	
-	
 	/** A method that returns a hashmap with the distributions for all the tasks just ran.
 	 * @param list
 	 * @return
@@ -1389,7 +2724,7 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 			if (cloudlet.getCloudletStatus() == Cloudlet.SUCCESS) {
 				String key = cloudlet.getTaskType() + "." + (cloudlet.getResourceId()-2);
 				
-				double completionTime = cloudlet.getFinishTime() - cloudlet.getSubmissionTime(); // current completion time
+				double completionTime = cloudlet.getFinishTime() - cloudlet.getArrivalTime(); // current completion time
 				// 
 				executionTimes.put(key, completionTime);	
 			}
@@ -1446,7 +2781,7 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 	 * @param list  list of Cloudlets
 	 * @throws IOException 
 	 */
-	private static void printCloudletList(List<Cloudlet> list, PrintWriter pw) throws IOException {
+	private static void printCloudletList(List<Cloudlet> list, PrintWriter pw, int numOfTaskAdmitted) throws IOException {
 		int size = list.size();
 		Cloudlet cloudlet;
 		
@@ -1464,10 +2799,10 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 		Log.printLine("========== OUTPUT ==========");
 		pw.println("========== OUTPUT ==========");
 		Log.printLine("Cloudlet ID" + indent + "STATUS" + indent +indent+
-				"Data center ID" + indent + indent+ "VM ID" + indent + indent+"  "+ "Execution Time"+indent+indent +"Task Length(MI)"+indent+"Task Type"+indent+indent+ "Start Time" + indent + "Finish Time"+indent+indent+indent+"Deadline"+indent+indent+indent+"Completion Time"+indent+indent+indent+"DeadLine Miss");
+				"Data center ID" + indent + indent+ "VM ID" + indent + indent+"  "+ "Execution Time"+indent+indent +"Task Length(MI)"+indent+"Task Type"+indent+indent+ "Start Time" + indent + "Finish Time"+indent+indent+indent+"Deadline"+indent+indent+"Completion Time"+indent+indent+"DeadlineMet"+indent+indent+"Arrival Time");
         
 		pw.println("Cloudlet ID" + indent + "STATUS" + indent +indent+
-				"Data center ID" + indent+indent+ "VM ID" + indent + indent+"  "+ "Execution Time"+indent+indent +"Task Length(MI)"+ indent+"Task Type"+indent+indent+indent+ "Start Time" + indent + "Finish Time"+indent+indent+indent+"Deadline"+indent+indent+indent+"Completion Time"+indent+indent+indent+"DeadLine Miss");
+				"Data center ID" + indent+indent+ "VM ID" + indent + indent+"  "+ "Execution Time"+indent+indent +"Task Length(MI)"+ indent+"Task Type"+indent+indent+indent+ "Start Time" + indent + "Finish Time"+indent+indent+indent+"Deadline"+indent+indent+"Completion Time"+indent+indent+"DeadlineMet"+indent+indent+"Arrival Time");
 		
 		
 		DecimalFormat dft = new DecimalFormat("###.##");
@@ -1482,22 +2817,28 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 				Log.print("SUCCESS");
 				pw.print("SUCCESS");
 				
-				if(cloudlet.getDeadline()<(cloudlet.getFinishTime() - cloudlet.getSubmissionTime())) {
-					str = "False";
-					counter++;
-				}
-				else {
-					str ="True";
+				if(cloudlet.getCloudletId() >=550000 && cloudlet.getCloudletId()<= (550000+numOfTaskAdmitted))
+				{
+					if(cloudlet.getDeadline()<cloudlet.getFinishTime()) {
+						str = "False";
+						counter++;
+					}
+					else {
+						str ="True";
+					}
+				
+					
 				}
 				
 				Log.printLine( indent + indent+cloudlet.getResourceName(cloudlet.getResourceId()) + indent + indent + indent + cloudlet.getVmId() +
 						indent + indent + indent + dft.format(cloudlet.getActualCPUTime()) +
-						indent + indent +indent+indent+indent +cloudlet.getCloudletLength()+ indent + indent +indent+indent+ cloudlet.getTaskType()+indent+indent+indent+ indent+dft.format(cloudlet.getExecStartTime())+ indent + indent+indent + dft.format(cloudlet.getFinishTime())+indent+indent+indent+indent+cloudlet.getDeadline()+indent+indent+indent+(cloudlet.getFinishTime() - cloudlet.getSubmissionTime())+indent+indent+indent+str);
+						indent + indent +indent+indent+indent +cloudlet.getCloudletLength()+ indent + indent +indent+indent+ cloudlet.getTaskType()+indent+indent+indent+ indent+dft.format(cloudlet.getExecStartTime())+ indent + indent+indent + dft.format(cloudlet.getFinishTime())+indent+indent+indent+indent+dft.format(cloudlet.getDeadline())+indent+indent+indent+indent+dft.format(cloudlet.getFinishTime() - cloudlet.getArrivalTime())+indent+indent+indent+indent+str+indent+indent+indent+cloudlet.getArrivalTime());
 				
-		
+				
 				pw.println( indent + indent+cloudlet.getResourceName(cloudlet.getResourceId()) + indent + indent + indent + cloudlet.getVmId() +
 						indent + indent + indent + dft.format(cloudlet.getActualCPUTime()) +
-						indent + indent+indent+indent+indent + cloudlet.getCloudletLength()+ indent + indent +indent+indent+cloudlet.getTaskType()+indent +indent+indent+indent +dft.format(cloudlet.getExecStartTime())+ indent + indent + indent+dft.format(cloudlet.getFinishTime())+indent+indent+indent+indent+cloudlet.getDeadline()+indent+indent+indent+(cloudlet.getFinishTime() - cloudlet.getSubmissionTime())+indent+indent+indent+str);
+						indent + indent+indent+indent+indent + cloudlet.getCloudletLength()+ indent + indent +indent+indent+cloudlet.getTaskType()+indent +indent+indent+indent +dft.format(cloudlet.getExecStartTime())+ indent + indent + indent+dft.format(cloudlet.getFinishTime())+indent+indent+indent+indent+dft.format(cloudlet.getDeadline())+indent+indent+indent+indent+dft.format(cloudlet.getFinishTime() - cloudlet.getArrivalTime())+indent+indent+indent+indent+str+indent+indent+indent+cloudlet.getArrivalTime());
+				
 			}
 			
 		}
@@ -1508,7 +2849,6 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
 		
 		
 		
-		//printWriter.close();
 	}
 	
 	
@@ -1598,4 +2938,3 @@ private static void getETTDistribution(List<Cloudlet> list, Datacenter dc0, Data
         }
     }
 }
-
