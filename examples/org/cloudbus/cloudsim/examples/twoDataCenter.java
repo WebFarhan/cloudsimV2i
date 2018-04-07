@@ -1834,13 +1834,13 @@ public class twoDataCenter {
 					
 						if(p==0) {
 						
-							tempCompletionTime[p] = matrix.getMu(cloudlet.getTaskType(), p)-baseStationProbability[p];;
+							tempCompletionTime[p] = matrix.getMu(cloudlet.getTaskType(), p);
 						}			
 						else if(p==1) {
-							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
+							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p));
 						}
 						else if(p==2) {
-							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
+							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p));
 						}
 						
 						
@@ -1892,16 +1892,16 @@ public class twoDataCenter {
 					for(int p = 0; p < 3; p++) { // calculating min completion time
 						
 						if(p==0) {
-						tempCompletionTime[p] = matrix.getMu(cloudlet.getTaskType(), p)-baseStationProbability[p];
+						tempCompletionTime[p] = matrix.getMu(cloudlet.getTaskType(), p);
 						
 						}
 						else if(p==1) {
-						tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
+						tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p));
 							
 						}
 						else if(p==2)
 						{
-							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p))-baseStationProbability[p];
+							tempCompletionTime[p] = (matrix.getMu(cloudlet.getTaskType(), p) + ettmatrix.getMu(cloudlet.getTaskType(), p));
 						}
 						
 						
@@ -2148,7 +2148,7 @@ public class twoDataCenter {
 //			}
 			
 			// Generating three workload for 3 Base Station
-			initialWorkload = 1000;
+			initialWorkload = 100;
 			
      		cloudletList4 = createInitialWorkLoad(broker1.getId(),initialWorkload,100,2000,1000,1850);
      		cloudletList5 = createInitialWorkLoad(broker2.getId(),initialWorkload,100,2000,30000,15000);

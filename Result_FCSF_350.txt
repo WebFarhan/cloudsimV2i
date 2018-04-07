@@ -1,0 +1,162 @@
+Over subscription with 350
+
+
+Number of tasks 100
+All counter array ::[0, 0, 0, 24, 8, 0, 13, 25, 1, 7, 8, 11, 26, 20, 1, 17, 10, 1, 9, 6, 1, 23, 26, 2, 22, 3, 2, 15, 5, 24, 27, 1, 10] with load balancer (FCFS)
+Average of task missing deadline : 11.6
+Min : 0.0
+Max : 27.0
+Standard Deviation : 9.272180613713978
+
+
+Number of tasks 100
+All counter array ::[0, 0, 0, 33, 66, 49, 69, 58, 41, 58, 65, 83, 75, 57, 83, 61, 50, 58, 62, 63, 58, 75, 71, 83, 58, 53, 58, 72, 55, 75, 60, 83, 58] with no load balancer (FCFS)
+Average of task missing deadline : 63.0
+Min : 41.0
+Max : 83.0
+Standard Deviation : 12.060956291549468
+============================================================================================
+
+Number of tasks 200
+All counter array ::[0, 0, 0, 26, 24, 1, 13, 49, 1, 8, 21, 11, 51, 49, 1, 27, 20, 3, 38, 10, 2, 48, 57, 2, 21, 34, 12, 42, 6, 26, 52, 10, 10] with load balancer (FCFS)
+Average of task missing deadline : 22.5
+Min : 1.0
+Max : 57.0
+Standard Deviation : 17.916007739821207
+
+
+Number of tasks 200
+All counter array ::[0, 0, 0, 79, 87, 70, 57, 37, 52, 72, 53, 41, 79, 55, 29, 29, 29, 71, 64, 44, 68, 79, 56, 28, 29, 36, 49, 29, 46, 79, 72, 29, 29] with no load balancer (FCFS)
+Average of task missing deadline : 52.56666666666667
+Min : 28.0
+Max : 87.0
+Standard Deviation : 19.1984084988545
+============================================================================================
+
+Number of tasks 300
+All counter array ::[0, 0, 0, 27, 49, 1, 13, 52, 19, 16, 53, 11, 52, 85, 8, 29, 64, 3, 82, 42, 2, 80, 76, 12, 43, 82, 16, 84, 47, 24, 87, 33, 18] with load balancer (FCFS)
+Average of task missing deadline : 40.333333333333336
+Min : 1.0
+Max : 87.0
+Standard Deviation : 28.372913530728955
+
+
+Number of tasks 300
+All counter array ::[0, 0, 0, 120, 125, 113, 104, 129, 123, 159, 88, 104, 105, 139, 88, 93, 125, 99, 117, 91, 104, 140, 95, 60, 95, 104, 104, 93, 105, 104, 179, 46, 86] with no load balancer (FCFS)
+Average of task missing deadline : 107.9
+Min : 46.0
+Max : 179.0
+Standard Deviation : 25.706484266296183
+============================================================================================
+
+Number of tasks 400
+All counter array ::[0, 0, 0, 33, 74, 1, 13, 70, 40, 15, 80, 18, 52, 97, 18, 29, 92, 37, 92, 76, 2, 89, 103, 3, 59, 110, 19, 110, 56, 24, 100, 54, 12] with load balancer (FCFS)
+Average of task missing deadline : 52.6
+Min : 1.0
+Max : 110.0
+Standard Deviation : 35.538336108114756
+
+
+Number of tasks 400
+All counter array ::[0, 0, 0, 149, 167, 125, 117, 196, 144, 204, 167, 119, 118, 187, 117, 128, 172, 183, 166, 141, 118, 171, 154, 115, 130, 162, 184, 144, 153, 119, 204, 133, 116] with no load balancer (FCFS)
+Average of task missing deadline : 150.1
+Min : 115.0
+Max : 204.0
+Standard Deviation : 28.267000784188852
+============================================================================================
+
+Number of tasks 500
+All counter array ::[0, 0, 0, 33, 99, 23, 13, 85, 64, 17, 98, 18, 52, 96, 41, 30, 86, 53, 81, 79, 2, 82, 110, 12, 74, 109, 20, 102, 50, 25, 116, 70, 12] with load balancer (FCFS)
+Average of task missing deadline : 58.4
+Min : 2.0
+Max : 116.0
+Standard Deviation : 35.15451606835173
+
+
+Number of tasks 500
+All counter array ::[0, 0, 0, 169, 242, 159, 146, 201, 154, 208, 223, 120, 142, 187, 134, 189, 172, 196, 237, 152, 122, 183, 175, 124, 173, 180, 209, 231, 160, 132, 204, 153, 134] with no load balancer (FCFS)
+Average of task missing deadline : 173.7
+Min : 120.0
+Max : 242.0
+Standard Deviation : 34.599759151377526
+============================================================================================
+
+Number of tasks 600
+All counter array ::[0, 0, 0, 33, 121, 48, 22, 102, 90, 37, 123, 29, 51, 106, 63, 30, 108, 73, 81, 86, 23, 81, 129, 36, 74, 114, 20, 114, 68, 25, 139, 90, 25] with load balancer (FCFS)
+Average of task missing deadline : 71.36666666666666
+Min : 20.0
+Max : 139.0
+Standard Deviation : 37.15327112860395
+
+
+Number of tasks 600
+All counter array ::[0, 0, 0, 169, 296, 194, 188, 210, 155, 215, 244, 146, 166, 187, 161, 208, 172, 196, 264, 161, 158, 195, 176, 181, 199, 180, 212, 254, 175, 148, 204, 162, 195] with no load balancer (FCFS)
+Average of task missing deadline : 192.36666666666667
+Min : 146.0
+Max : 296.0
+Standard Deviation : 34.70781212093643
+============================================================================================
+
+Number of tasks 700
+All counter array ::[0, 0, 0, 53, 135, 71, 41, 102, 114, 62, 144, 50, 50, 107, 86, 40, 127, 98, 80, 107, 37, 81, 149, 62, 73, 123, 27, 113, 94, 42, 146, 107, 35] with load balancer (FCFS)
+Average of task missing deadline : 85.2
+Min : 27.0
+Max : 149.0
+Standard Deviation : 36.29178052029596
+
+
+Number of tasks 700
+All counter array ::[0, 0, 0, 190, 286, 218, 223, 209, 156, 224, 259, 167, 177, 187, 177, 217, 172, 198, 264, 172, 179, 199, 177, 198, 205, 193, 231, 266, 175, 180, 204, 170, 218] with no load balancer (FCFS)
+Average of task missing deadline : 203.03333333333333
+Min : 156.0
+Max : 286.0
+Standard Deviation : 32.17191667001241
+============================================================================================
+
+Number of tasks 800
+All counter array ::[0, 0, 0, 64, 136, 96, 66, 100, 124, 86, 167, 75, 62, 105, 111, 53, 126, 123, 79, 118, 47, 80, 174, 86, 73, 123, 31, 113, 119, 59, 146, 127, 60] with load balancer (FCFS)
+Average of task missing deadline : 97.63333333333334
+Min : 31.0
+Max : 174.0
+Standard Deviation : 35.02711647979161
+
+
+Number of tasks 800
+All counter array ::[0, 0, 0, 205, 284, 253, 247, 210, 156, 224, 268, 208, 227, 187, 221, 226, 172, 200, 271, 180, 200, 205, 202, 213, 205, 200, 235, 268, 179, 209, 204, 190, 227] with no load balancer (FCFS)
+Average of task missing deadline : 215.86666666666667
+Min : 156.0
+Max : 284.0
+Standard Deviation : 30.290519235489437
+============================================================================================
+
+Number of tasks 900
+All counter array ::[0, 0, 0, 64, 142, 122, 89, 98, 124, 108, 171, 104, 77, 107, 132, 78, 124, 130, 79, 116, 72, 87, 183, 111, 72, 125, 34, 112, 144, 84, 144, 135, 84] with load balancer (FCFS)
+Average of task missing deadline : 108.4
+Min : 34.0
+Max : 183.0
+Standard Deviation : 32.13990250970487
+
+
+Number of tasks 900
+All counter array ::[0, 0, 0, 221, 328, 287, 282, 210, 161, 224, 276, 268, 243, 193, 277, 227, 174, 213, 272, 181, 225, 216, 229, 230, 205, 206, 238, 269, 193, 225, 204, 234, 227] with no load balancer (FCFS)
+Average of task missing deadline : 231.26666666666668
+Min : 161.0
+Max : 328.0
+Standard Deviation : 36.876309769582726
+============================================================================================
+
+Number of tasks 1000
+All counter array ::[0, 0, 0, 64, 144, 135, 106, 98, 133, 109, 176, 129, 100, 107, 142, 103, 123, 135, 85, 117, 98, 104, 195, 129, 73, 125, 54, 112, 163, 108, 144, 146, 109] with load balancer (FCFS)
+Average of task missing deadline : 118.86666666666666
+Min : 54.0
+Max : 195.0
+Standard Deviation : 30.20014716667601
+
+
+Number of tasks 1000
+All counter array ::[0, 0, 0, 221, 348, 315, 303, 210, 195, 224, 276, 295, 265, 206, 307, 227, 177, 219, 272, 195, 238, 222, 248, 252, 206, 209, 246, 269, 210, 237, 206, 268, 227] with no load balancer (FCFS)
+Average of task missing deadline : 243.1
+Min : 177.0
+Max : 348.0
+Standard Deviation : 40.52928982024399
+============================================================================================

@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -22,6 +24,9 @@ import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.examples.VTasks;
 import org.cloudbus.cloudsim.lists.CloudletList;
 import org.cloudbus.cloudsim.lists.VmList;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 
 
 
@@ -35,6 +40,10 @@ import org.cloudbus.cloudsim.lists.VmList;
  */
 public class DatacenterBroker extends SimEntity {
 
+	private static ListMultimap<String, Double> executionTimes = ArrayListMultimap.create();
+	private static HashMap<String, NormalDistribution> distributions = new HashMap<>();
+	private static HashMap<String, NormalDistribution> trTimes = new HashMap<>();
+	
 	/** The vm list. */
 	protected List<? extends Vm> vmList;
 
@@ -403,6 +412,62 @@ public class DatacenterBroker extends SimEntity {
 	    return randomNumber;
 	  }
 	
+	/** A method that returns a hashmap with the distributions for all the tasks just ran.
+	 * @param list
+	 * @return
+	 */
+
+	private static void getDistribution(List<Cloudlet> list) {
+		
+		Cloudlet cloudlet;
+		int size = list.size();
+
+		//long timeMillis = System.currentTimeMillis(); // current time in miliseconds
+        //long timeSeconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis);// current time in seconds
+		
+			
+		for(int i = 0; i < size; i++) {
+			cloudlet = list.get(i);
+			if (cloudlet.getCloudletStatus() == Cloudlet.SUCCESS) {
+				String key = cloudlet.getTaskType() + "." + (cloudlet.getResourceId()-2);
+				
+				double completionTime = cloudlet.getFinishTime() - cloudlet.getArrivalTime(); // current completion time
+				// 
+				executionTimes.put(key, completionTime);	
+			}
+		}
+		
+		for(String taskTbaseST : executionTimes.keySet())	{
+			
+			List<Double> times = executionTimes.get(taskTbaseST);
+			double sum = 0;
+			double sqsum = 0;
+			for(Double time: times) {
+				sum += time;
+			}
+			double mu = sum/times.size();
+			try {
+			if (mu == sum) {
+				 double sigma = 0.0;
+				 NormalDistribution distr = new NormalDistribution(mu, sigma);
+					distributions.put(taskTbaseST, distr);
+			}
+			
+			else {
+				for(Double time: times) {
+					sqsum += Math.pow(time-mu, 2);
+				}
+				double sigma = Math.sqrt(sqsum/(times.size()-1));
+				NormalDistribution distr = new NormalDistribution(mu, sigma);
+				distributions.put(taskTbaseST, distr);
+			}
+			}catch( NotStrictlyPositiveException exp) {
+				}
+			}
+		}
+	
+	
+	
 	
 	/**
 	 * Submit cloudlets to the created VMs.
@@ -468,7 +533,7 @@ public class DatacenterBroker extends SimEntity {
 		}
 		
 		
-		for (Cloudlet cloudlet : sortList) {// using the sorted array ... edited by razin
+		for (Cloudlet cloudlet : SC_policy_Que) {// using the sorted array ... edited by razin
 			Vm vm;
 			
 			// if user didn't bind this cloudlet and it has not been executed yet
@@ -495,26 +560,13 @@ public class DatacenterBroker extends SimEntity {
 			
 			cloudlet.setVmId(vm.getId()); 
 			
+					
+			schedule(getVmsToDatacentersMap().get(vm.getId()),cloudlet.getArrivalTime(),CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
 			
-			
-			
-			schedule(getVmsToDatacentersMap().get(vm.getId()),0,CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
-			
-			//System.out.println("@@@@@@@ VMs to Datacenters Map @@@@@@@    " + getVmsToDatacentersMap().get(vm.getId()));
-						
-			Log.printLine("**** Cloudlet ID : "+cloudlet.getCloudletId()+" Cloudlet status ====  "+cloudlet.getCloudletFinishedSoFar());
-			cloudletsSubmitted++;
-			
+					
 			vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
-			
-			//CloudSim.pauseSimulation();
-			//getVTasksSubmittedList().add(vtask);
-			
 			getCloudletSubmittedList().add(cloudlet);
-			
-			
-			//System.out.println("Poisson number : "+getPoisson(showDelayRandomInteger(1,10,randomDelay)));
-			delay=delay+showDelayRandomInteger(1,5,randomDelay); // adding delay randomly between 1 to 10 seconds 
+			//delay=delay+showDelayRandomInteger(1,5,randomDelay); // adding delay randomly between 1 to 10 seconds 
 
 		  }
 			
