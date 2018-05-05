@@ -482,6 +482,8 @@ public class DatacenterBroker extends SimEntity {
 		
 	    List<Cloudlet> sortList = new ArrayList<Cloudlet>();
 	    
+	    List<Cloudlet> pasuedCloudletList = new ArrayList<Cloudlet>();
+	    
 	    
 	    //List<VTasks> sortList = new ArrayList<VTasks>();
 		ArrayList<Cloudlet> tempList = new ArrayList<Cloudlet>();
@@ -533,15 +535,13 @@ public class DatacenterBroker extends SimEntity {
 		}
 		
 		
-		for (Cloudlet cloudlet : SC_policy_Que) {// using the sorted array ... edited by razin
+		for (Cloudlet cloudlet : sortList) {// using the sorted array ... edited by razin
 			Vm vm;
 			
 			// if user didn't bind this cloudlet and it has not been executed yet
 			if (cloudlet.getVmId() == -1) {
 				vm = getVmsCreatedList().get(vmIndex);
 			} else { // submit to the specific vm
-				
-				
 				vm = VmList.getById(getVmsCreatedList(), cloudlet.getVmId());
 				if (vm == null) { // vm was not created
 					Log.printLine(CloudSim.clock() + ": " + getName() + ": Postponing execution of cloudlet "
@@ -550,32 +550,45 @@ public class DatacenterBroker extends SimEntity {
 				}
 			}
 
-			Log.printLine(CloudSim.clock() + ": " + getName() + ": Sending cloudlet "
-					+ cloudlet.getCloudletId() + " to VM #" + vm.getId());
-			
+			Log.printLine(CloudSim.clock() + ": " + getName() + ": Sending cloudlet "+ cloudlet.getCloudletId() + " to VM #" + vm.getId());
 
-			
-			//Log.printLine("******************* Vm ID : " +vm.getId()+" Mips of Vm : "+vm.getMips()+" Cloudlet ID "+ cloudlet.getCloudletId()+" cloudlet size : "+cloudlet.getCloudletLength());
-	
-			
 			cloudlet.setVmId(vm.getId()); 
 			
-					
-			schedule(getVmsToDatacentersMap().get(vm.getId()),cloudlet.getArrivalTime(),CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
 			
+//			if(cloudlet.getArrivalTime() < 100.0) {
+//			
+//				schedule(getVmsToDatacentersMap().get(vm.getId()),cloudlet.getArrivalTime(),CloudSimTags.CLOUDLET_SUBMIT, cloudlet); // controlling cloudlets delay
+//			}
+//			else {
+//				
+//				//pasuedCloudletList.add(cloudlet);
+//				cloudlet.setArrivalTime(cloudlet.getArrivalTime()+10);
+//				schedule(getVmsToDatacentersMap().get(vm.getId()),cloudlet.getArrivalTime(),CloudSimTags.CLOUDLET_SUBMIT, cloudlet);
+//			}
+
 					
+			schedule(getVmsToDatacentersMap().get(vm.getId()),cloudlet.getArrivalTime(),CloudSimTags.CLOUDLET_SUBMIT, cloudlet);
 			vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
 			getCloudletSubmittedList().add(cloudlet);
-			//delay=delay+showDelayRandomInteger(1,5,randomDelay); // adding delay randomly between 1 to 10 seconds 
+			 
 
 		  }
+		
+		// delaying arrival time by 10 seconds and schedule
+		for (Cloudlet cloudlet:pasuedCloudletList) {
 			
-	    //}
+			System.out.println(" Cloudlet ID : " + cloudlet.getCloudletId()+ " Arrival time : " + cloudlet.getArrivalTime());
+			
+			
+		}
+		
 
-		// remove submitted cloudlets from waiting list
 		for (Cloudlet cloudlet : getCloudletSubmittedList()) {
 			getCloudletList().remove(cloudlet);
 		}
+		
+		
+		
 	}
 	
 	

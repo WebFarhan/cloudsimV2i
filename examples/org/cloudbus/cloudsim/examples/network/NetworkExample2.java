@@ -105,6 +105,8 @@ public class NetworkExample2 {
 			long fileSize = 300;
 			long outputSize = 300;
 			int pesNumber = 1;
+			
+			long lengthAdd = 0;
 			UtilizationModel utilizationModel = new UtilizationModelFull();
 
 			Cloudlet[] cloudlet = new Cloudlet[cloudlets];
@@ -112,12 +114,14 @@ public class NetworkExample2 {
 			for(int i=0;i<cloudlets;i++){
 				Random rObj = new Random();
 				
-				cloudlet[i] = new Cloudlet(1,idShift+i,length,0,0,0,showRandomInteger(0,1,rObj),
+				cloudlet[i] = new Cloudlet(1,idShift+i,length+lengthAdd,0,0,0,showRandomInteger(0,1,rObj),
 						showRandomInteger(120,120,rObj),pesNumber, fileSize, outputSize, utilizationModel, 
 						utilizationModel, utilizationModel,0);
 				// setting the owner of these Cloudlets
 				cloudlet[i].setUserId(userId);
 				list.add(cloudlet[i]);
+				
+				lengthAdd=lengthAdd+100;
 			}
 
 			return list;
@@ -189,25 +193,8 @@ public class NetworkExample2 {
 			cloudletList = new ArrayList<Cloudlet>();
 
 			
-			//Cloudlet properties
-			/*
-			int id = 0;
-			long length = 2000;
-			long fileSize = 300;
-			long outputSize = 300;
-			UtilizationModel utilizationModel = new UtilizationModelFull();
-
-			Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-			cloudlet1.setUserId(brokerId);
-
-			id++;
-			Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-			cloudlet2.setUserId(brokerId);
-			*/
-			
-
-			
-			cloudletList = createCloudlet(broker.getId(),5,100,200,1);// cloudlet length from 1100-1200
+					
+			cloudletList = createCloudlet(broker.getId(),5,200,3000,1);// cloudlet length from 1100-1200
 			
 			
 			

@@ -12,7 +12,7 @@ public class ETTmatrix {
 	 *  The matrix is holding a mean and a standard deviation 
 	 *  for each type of task on every base station
 	 */
-	protected NormalDistribution[][] etcMatrix = null;
+	protected NormalDistribution[][] ettMatrix = null;
 	
 	/**
 	 * The number of Virtual Machines in the simulation and
@@ -45,7 +45,7 @@ public class ETTmatrix {
 		
 		this.totalDataC = dataCnum;
 		this.totalCloudlet = taskTypeTotal;
-		this.etcMatrix = new NormalDistribution[taskTypeTotal+1][dataCnum];
+		this.ettMatrix = new NormalDistribution[taskTypeTotal+1][dataCnum];
 		this.distributions = _distributions;
 		
 		for(String key: distributions.keySet()) {
@@ -55,7 +55,7 @@ public class ETTmatrix {
 			int row = Integer.parseInt(arrays[0]);
 			int column = Integer.parseInt(arrays[1]);
 			NormalDistribution newDistribution = distributions.get(key);
-			this.etcMatrix[row][column] = newDistribution;
+			this.ettMatrix[row][column] = newDistribution;
 			
 			
 			}
@@ -100,33 +100,33 @@ public class ETTmatrix {
 
 	public double getMu(int taskType, int DataCenter) {
 		
-		if(etcMatrix[taskType][DataCenter] == null) {
+		if(ettMatrix[taskType][DataCenter] == null) {
 			return 0.0;
 		}
 		
-		NormalDistribution distr = etcMatrix[taskType][DataCenter];
+		NormalDistribution distr = ettMatrix[taskType][DataCenter];
 		
 		return distr.getMean();
 	}
 	
 	public double getSigma(int taskType, int DataCenter) {
 		
-		if(etcMatrix[taskType][DataCenter] == null) {
+		if(ettMatrix[taskType][DataCenter] == null) {
 			return 0.0;
 		}
 		
-		NormalDistribution distr = etcMatrix[taskType][DataCenter];
+		NormalDistribution distr = ettMatrix[taskType][DataCenter];
 		
 		return distr.getStandardDeviation();
 	}
 	
 	public double getWorseCaseTime(int taskType, int DataCenter) {
 		
-		if(etcMatrix[taskType][DataCenter] == null) {
+		if(ettMatrix[taskType][DataCenter] == null) {
 			return 0.0;
 		}
 		
-		NormalDistribution distr = etcMatrix[taskType][DataCenter];
+		NormalDistribution distr = ettMatrix[taskType][DataCenter];
 		double time = distr.getMean() + distr.getStandardDeviation();
 		
 		return time;
@@ -135,10 +135,10 @@ public class ETTmatrix {
 	
 	public double getProbability(int taskType, int dataCenter, double deadLine) {
 		
-		if(etcMatrix[taskType][dataCenter] == null) {
+		if(ettMatrix[taskType][dataCenter] == null) {
 			return 1.0;
 		}
-		NormalDistribution distr = etcMatrix[taskType][dataCenter];
+		NormalDistribution distr = ettMatrix[taskType][dataCenter];
 		//double worstTime = distr.getMean() + distr.getStandardDeviation();
 		
 		return distr.cumulativeProbability(deadLine);
@@ -149,7 +149,7 @@ public class ETTmatrix {
 	
 	public void printMatrix() {
 		
-		System.out.println(Arrays.deepToString(etcMatrix));
+		System.out.println(Arrays.deepToString(ettMatrix));
 		
 	}
 	
